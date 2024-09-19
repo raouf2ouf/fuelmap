@@ -1,11 +1,13 @@
-import { combineReducers, configureStore } from "@redusjs/toolkit";
+import { combineReducers, configureStore } from "@reduxjs/toolkit";
 import { TypedUseSelectorHook, useDispatch, useSelector } from "react-redux";
 import galaxiesReducer from "./galaxies.slice";
 import backupReducer from "./backup.slice";
+import tasksReducer from "./tasks.slice";
 
 const rootReducer = combineReducers({
   backup: backupReducer,
   galaxies: galaxiesReducer,
+  tasks: tasksReducer,
 });
 
 export const setupStore = (preloadedState?: any) => {

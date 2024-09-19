@@ -1,13 +1,13 @@
 import { Task } from "./task";
 
 export type TaskChange = {
-  id: string;
+  id: number;
   changes: Partial<Task>;
 };
 
 export type BackupAction = {
   tasksChange?: TaskChange[];
-  tasksDelete?: string[];
+  tasksDelete?: number[];
   tasksAdd?: Task[];
 };
 
