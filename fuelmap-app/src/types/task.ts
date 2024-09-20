@@ -22,7 +22,6 @@ interface PartialInflated {
 type InflatedCommon = PartialInflated & {
   progress?: number;
   galaxyId: string;
-  parentId?: number;
   displayed: boolean;
   index: number;
 };
@@ -90,7 +89,6 @@ export function deflateTask<T extends TaskType>(
   // delete inflated properties
   delete deflated.progress;
   delete (deflated as PartialInflated).galaxyId;
-  delete deflated.parentId;
   delete (deflated as PartialInflated).displayed;
   delete (deflated as PartialInflated).index;
 
