@@ -33,6 +33,7 @@ import "@ionic/react/css/palettes/dark.system.css";
 /* Theme variables */
 import "./theme/variables.scss";
 import { Providers } from "./providers";
+import { ToastContainer } from "react-toastify";
 
 setupIonicReact();
 
@@ -41,15 +42,13 @@ const App: React.FC = () => (
     <IonApp>
       <IonReactRouter>
         <IonRouterOutlet>
-          <Route exact path="/home">
+          <Route path="/">
             <Home />
-          </Route>
-          <Route exact path="/">
-            <Redirect to="/home" />
           </Route>
         </IonRouterOutlet>
       </IonReactRouter>
     </IonApp>
+    <ToastContainer autoClose={5000} theme="dark" position="bottom-center" />
   </Providers>
 );
 

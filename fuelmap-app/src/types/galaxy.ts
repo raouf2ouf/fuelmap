@@ -1,14 +1,14 @@
 import { TaskType } from "./enums";
 import { DeflatedTask } from "./task";
 
-export type Galaxy = {
+export type DeflatedGalaxy = {
   id: string;
   name: string;
   description: string;
   date: number | undefined;
-  blockchainDate: number | undefined;
-};
-
-export type GalaxyWithTasks = Galaxy & {
+  localdate?: number | undefined;
   tasks: DeflatedTask<TaskType>[];
+};
+export type Galaxy = DeflatedGalaxy & {
+  needToSave: boolean;
 };

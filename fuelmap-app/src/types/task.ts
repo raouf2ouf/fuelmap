@@ -5,45 +5,39 @@ interface BaseTask {
   id: number;
   name: string;
   checked: boolean;
-  closed: boolean;
   description?: string;
 }
 
 // Inflated properties common across all inflated tasks
 
-interface PartialInflated {
+export interface PartialInflated {
   progress?: number;
   galaxyId?: string;
-  parentId?: number;
+  closed?: boolean;
+  color?: number;
   displayed?: boolean;
-  index?: number;
 }
 
 type InflatedCommon = PartialInflated & {
   progress?: number;
   galaxyId: string;
+  closed: boolean;
+  color: number;
   displayed: boolean;
-  index: number;
 };
 // Specific task types
 
 interface SectorTask {
-  type: TaskType.SECTOR;
   color: number;
 }
 
 interface SystemTask {
-  type: TaskType.SYSTEM;
   hex?: number;
 }
 
-interface PlanetTask {
-  type: TaskType.PLANET;
-}
+interface PlanetTask {}
 
-interface MoonTask {
-  type: TaskType.MOON;
-}
+interface MoonTask {}
 
 // Create the inflated/deflated version for each task type
 export type InflatedTask<T extends TaskType> = BaseTask &
@@ -79,18 +73,3 @@ export type Task<
     | TaskType.MOON,
   S extends "inflated" | "deflated" = "inflated",
 > = S extends "inflated" ? InflatedTask<T> : DeflatedTask<T>;
-
-export function deflateTask<T extends TaskType>(
-  inflatedTask: InflatedTask<T>,
-): DeflatedTask<T> {
-  const deflated = {
-    ...inflatedTask,
-  } satisfies DeflatedTask<T>;
-  // delete inflated properties
-  delete deflated.progress;
-  delete (deflated as PartialInflated).galaxyId;
-  delete (deflated as PartialInflated).displayed;
-  delete (deflated as PartialInflated).index;
-
-  return deflated;
-}

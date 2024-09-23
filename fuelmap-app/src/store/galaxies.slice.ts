@@ -4,15 +4,16 @@ import {
   createSelector,
   createSlice,
 } from "@reduxjs/toolkit";
-import { Galaxy, GalaxyWithTasks } from "../types/galaxy";
+import { DeflatedGalaxy, Galaxy } from "../types/galaxy";
 import type { RootState } from "./store";
-import { deflateTask } from "../types/task";
 import { getAllLocalGalaxies, saveGalaxyLocally } from "../api/local";
+import { inflateTasks } from "./tasks.slice";
+import { deflateTask } from "./tasks.utils";
 
 // API
 export const saveCurrentGalaxyLocally = createAsyncThunk(
   "galaxies/saveLocally",
-  async (_, thunkAPI): Promise<Galaxy | undefined> => {
+  async (_, thunkAPI): Promise<DeflatedGalaxy | undefined> => {
     const state = thunkAPI.getState() as RootState;
     const currentGalaxyId = state.galaxies.currentGalaxyId;
     if (!currentGalaxyId) return;
@@ -20,12 +21,13 @@ export const saveCurrentGalaxyLocally = createAsyncThunk(
     const tasks = Object.values(state.tasks.entities)
       .filter((t) => t.galaxyId == currentGalaxyId)
       .map((t) => deflateTask(t));
-    const galaxyData: GalaxyWithTasks = { ...currentGalaxy, tasks };
+    const galaxyData: DeflatedGalaxy = { ...currentGalaxy, tasks };
     galaxyData.date = Date.now();
     await saveGalaxyLocally(galaxyData);
     return galaxyData;
   },
 );
+
 export const loadLocalGalaxies = createAsyncThunk(
   "galaxies/loadLocalGalaxies",
   async (
@@ -43,14 +45,40 @@ export const loadLocalGalaxies = createAsyncThunk(
     }
     return {
       galaxies: galaxies.map((g) => ({
-        id: g.id,
-        name: g.name,
-        date: g.date,
-        description: g.description,
-        blockchainDate: g.blockchainDate,
+        ...g,
+        needToSave: false,
       })),
       galaxyId,
     };
+  },
+);
+
+export const loadGalaxy = createAsyncThunk(
+  "galaxies/loadGalaxy",
+  async (galaxy: DeflatedGalaxy, thunkAPI): Promise<DeflatedGalaxy> => {
+    if (galaxy.tasks && galaxy.tasks.length > 0) {
+      await thunkAPI.dispatch(
+        inflateTasks({ tasks: galaxy.tasks, galaxyId: galaxy.id }),
+      );
+    }
+    return galaxy;
+  },
+);
+
+export const setCurrentGalaxy = createAsyncThunk(
+  "galaxies/setCurrentGalaxy",
+  async (
+    galaxyId: string | undefined,
+    thunkAPI,
+  ): Promise<string | undefined> => {
+    if (galaxyId) {
+      const state = thunkAPI.getState() as RootState;
+      const galaxy = state.galaxies.entities[galaxyId];
+      await thunkAPI.dispatch(
+        inflateTasks({ tasks: galaxy?.tasks || [], galaxyId }),
+      );
+    }
+    return galaxyId;
   },
 );
 
@@ -70,12 +98,38 @@ export const selectCurrentGalaxy = createSelector(
 
 // Slice
 type ExtraState = {
-  currentGalaxyId?: string;
+  currentGalaxyId?: string | undefined;
 };
 export const galaxiesSlice = createSlice({
   name: "galaxies",
   initialState: galaxiesAdapter.getInitialState<ExtraState>({}),
   reducers: {},
+  extraReducers: (builder) => {
+    builder.addCase(saveCurrentGalaxyLocally.fulfilled, (state, action) => {
+      if (action.payload) {
+        galaxiesAdapter.upsertOne(state, {
+          ...action.payload,
+          needToSave: false,
+        });
+      }
+    });
+    builder.addCase(loadLocalGalaxies.fulfilled, (state, action) => {
+      galaxiesAdapter.upsertMany(state, action.payload.galaxies);
+      if (action.payload.galaxyId) {
+        state.currentGalaxyId = action.payload.galaxyId;
+      }
+    });
+    builder.addCase(loadGalaxy.fulfilled, (state, action) => {
+      galaxiesAdapter.upsertOne(state, {
+        ...action.payload,
+        needToSave: false,
+      });
+      state.currentGalaxyId = action.payload.id;
+    });
+    builder.addCase(setCurrentGalaxy.fulfilled, (state, action) => {
+      state.currentGalaxyId = action.payload;
+    });
+  },
 });
 
 export const {} = galaxiesSlice.actions;
