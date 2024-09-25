@@ -24,6 +24,20 @@ export function deflateTask<T extends TaskType>(
   return deflated;
 }
 
+export function getTypeText(id: number): string {
+  const type = getTypeGivenId(id);
+  switch (type) {
+    case TaskType.SECTOR:
+      return "sec";
+    case TaskType.SYSTEM:
+      return "sys";
+    case TaskType.PLANET:
+      return "pla";
+    default:
+      return "moo";
+  }
+}
+
 export const TASK_TYPE_MASK = {
   [TaskType.SECTOR]: 0b111000000000,
   [TaskType.SYSTEM]: 0b000111000000,
