@@ -9,6 +9,18 @@ import type { RootState } from "./store";
 import { getAllLocalGalaxies, saveGalaxyLocally } from "../api/local";
 import { inflateTasks } from "./tasks.slice";
 import { deflateTask } from "./tasks.utils";
+import { Task } from "../types/task";
+
+function deflateGalaxy(galaxy: Galaxy, tasks: Task[]): DeflatedGalaxy {
+  const galaxyData: DeflatedGalaxy = {
+    ...galaxy,
+    tasks: tasks
+      .filter((t) => t.galaxyId == galaxy.id && t.name.length > 0)
+      .map((t) => deflateTask(t)),
+  };
+  delete (galaxyData as any).needToSave;
+  return galaxyData;
+}
 
 // API
 export const saveCurrentGalaxyLocally = createAsyncThunk(
@@ -18,13 +30,33 @@ export const saveCurrentGalaxyLocally = createAsyncThunk(
     const currentGalaxyId = state.galaxies.currentGalaxyId;
     if (!currentGalaxyId) return;
     const currentGalaxy = state.galaxies.entities[currentGalaxyId];
-    const tasks = Object.values(state.tasks.entities)
-      .filter((t) => t.galaxyId == currentGalaxyId)
-      .map((t) => deflateTask(t));
-    const galaxyData: DeflatedGalaxy = { ...currentGalaxy, tasks };
+    const tasks = Object.values(state.tasks.entities);
+    const galaxyData: DeflatedGalaxy = deflateGalaxy(currentGalaxy, tasks);
     galaxyData.date = Date.now();
     await saveGalaxyLocally(galaxyData);
     return galaxyData;
+  },
+);
+
+export const downloadCurrentGalaxy = createAsyncThunk(
+  "galaxies/downloadCurrentGalaxy",
+  async (_, thunkAPI): Promise<void> => {
+    const state = thunkAPI.getState() as RootState;
+    const currentGalaxyId = state.galaxies.currentGalaxyId;
+    if (!currentGalaxyId) return;
+    const currentGalaxy = state.galaxies.entities[currentGalaxyId];
+    const tasks = Object.values(state.tasks.entities);
+    const galaxyData = deflateGalaxy(currentGalaxy, tasks);
+    const jsonStr = JSON.stringify(galaxyData);
+    const blob = new Blob([jsonStr], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${currentGalaxy.name}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   },
 );
 

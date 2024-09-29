@@ -1,10 +1,10 @@
 import { memo } from "react";
-import "./OverviewPage.scss";
 import { IonContent, IonPage } from "@ionic/react";
 
-import "./OverviewPage.scss";
+import "./Overview.scss";
 import { Redirect } from "react-router";
 import { useAppSelector } from "../../store/store";
+import TaskList from "../../components/TaskDisplay/TaskList/TaskList";
 const OverviewPage: React.FC = () => {
   const currentGalaxyId = useAppSelector(
     (state) => state.galaxies.currentGalaxyId,

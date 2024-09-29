@@ -26,8 +26,12 @@ import SideMenu from "../components/SideMenu/SideMenu";
 
 import "./Home.scss";
 import Projects from "./projects/Projects";
-import { useAppSelector } from "../store/store";
-import { selectCurrentGalaxy } from "../store/galaxies.slice";
+import { useAppDispatch, useAppSelector } from "../store/store";
+import { loadLocalGalaxies, setCurrentGalaxy } from "../store/galaxies.slice";
+import BackupDisplay from "../components/BackupDisplay/BackupDisplay";
+import SaveDisplay from "../components/SaveDisplay/SaveDisplay";
+import Overview from "./overview/Overview";
+
 function extractGalaxyIdFromPathname(pathname: string): string | undefined {
   let galaxyId: string | undefined;
   const path = pathname.split("/");
@@ -42,14 +46,17 @@ function extractGalaxyIdFromPathname(pathname: string): string | undefined {
 
 const Home: React.FC = () => {
   const version = "0.1.0";
-  // const currentGalaxyId: string = useAppSelector(selectCurrentGalaxy)!;
+  const dispatch = useAppDispatch();
+  const currentGalaxyId: string | undefined = useAppSelector(
+    (state) => state.galaxies.currentGalaxyId,
+  );
 
   const history = useHistory();
 
   useEffect(() => {
     const galaxyId = extractGalaxyIdFromPathname(location.pathname);
     if (galaxyId) {
-      // dispatch(setCurrentGalaxy(galaxyId));
+      dispatch(loadLocalGalaxies(galaxyId));
     }
   }, []);
 
@@ -57,7 +64,7 @@ const Home: React.FC = () => {
     const unlisten = history.listen((location, action) => {
       const galaxyId = extractGalaxyIdFromPathname(location.pathname);
       if (galaxyId) {
-        // dispatch(setCurrentGalaxy(galaxyId));
+        dispatch(setCurrentGalaxy(galaxyId));
       }
     });
 
@@ -92,6 +99,8 @@ const Home: React.FC = () => {
               </div>
             </div>
             <div className="header-middle"></div>
+            <BackupDisplay />
+            <SaveDisplay />
           </div>
         </IonToolbar>
       </IonHeader>
@@ -104,24 +113,28 @@ const Home: React.FC = () => {
             <IonRouterOutlet>
               <Redirect exact path="/" to="/projects" />
               <Route path="/projects" render={() => <Projects />} />
+              <Route path="/overview" render={() => <Overview />} />
             </IonRouterOutlet>
             <IonTabBar slot="bottom">
-              <IonTabButton tab="projects" href={`/projects`}>
+              <IonTabButton
+                tab="projects"
+                href={`/projects/${currentGalaxyId || ""}`}
+              >
                 <IonIcon icon={folderOpenSharp} />
                 <IonLabel>Projects</IonLabel>
               </IonTabButton>
               <IonTabButton
                 tab="map"
-                // href={`/map/${currentGalaxyId}`}
-                // disabled={!currentGalaxyId}
+                href={`/map/${currentGalaxyId}`}
+                disabled={!currentGalaxyId}
               >
                 <IonIcon icon={mapSharp} />
                 <IonLabel>Map</IonLabel>
               </IonTabButton>
               <IonTabButton
                 tab="overview"
-                // href={`/overview/${currentGalaxyId}`}
-                // disabled={!currentGalaxyId}
+                href={`/overview/${currentGalaxyId}`}
+                disabled={!currentGalaxyId}
               >
                 <IonIcon icon={listSharp} />
                 <IonLabel>Overview</IonLabel>

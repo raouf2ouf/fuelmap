@@ -8,20 +8,14 @@ import { setEdit } from "../../../store/tasks.slice";
 import { Task } from "../../../types/task";
 import { checkmarkSharp, closeSharp } from "ionicons/icons";
 import ColorPicker from "../../ColorPicker/ColorPicker";
+import { getTypeGivenId } from "../../../store/tasks.utils";
 type Props = {
   id: number;
-  type: TaskType;
   name: string;
   description: string;
   color: number;
 };
-const TaskItemEditOn: React.FC<Props> = ({
-  id,
-  type,
-  name,
-  description,
-  color,
-}) => {
+const TaskItemEditOn: React.FC<Props> = ({ id, name, description, color }) => {
   const dispatch = useAppDispatch();
   const [nameE, setNameE] = useState<string>(name);
   const [descriptionE, setDescriptionE] = useState<string>(description);
@@ -125,7 +119,7 @@ const TaskItemEditOn: React.FC<Props> = ({
       </div>
       <div className="toolbar">
         <div className="toolbar-specific">
-          {type == TaskType.SECTOR && (
+          {getTypeGivenId(id) == TaskType.SECTOR && (
             <ColorPicker color={colorE} onChange={setColorE} />
           )}
         </div>

@@ -11,13 +11,18 @@ import { DeflatedTask, InflatedTask, Task } from "../types/task";
 import { BackupAction, BackupStep, TaskChange } from "../types/backup";
 import type { RootState } from "./store";
 import {
+  generateIdForPosition,
+  generateSiblingId,
   getAllChildren,
   getParentId,
   getTypeGivenId,
+  morphTask,
   propagateChecked,
   propagateToggle,
 } from "./tasks.utils";
 import { backup } from "./backup.slice";
+import { toast } from "react-toastify";
+import { TooMany } from "./tasks.errors";
 
 // API
 export const inflateTasks = createAsyncThunk(
@@ -57,31 +62,98 @@ export const inflateTasks = createAsyncThunk(
   },
 );
 
-export const addTask = createAsyncThunk(
-  "tasks/addTask",
-  async (id: number, thunkAPI): Promise<InflatedTask<TaskType>> => {
+export const setEdit = createAsyncThunk(
+  "tasks/setEdit",
+  async (id: number | undefined, thunkAPI): Promise<number | undefined> => {
+    await thunkAPI.dispatch(addTask());
+    return id;
+  },
+);
+export const addNewTask = createAsyncThunk(
+  "tasks/addNewTask",
+  async (
+    data:
+      | { addBeforeId?: number; addAfterId?: number; parentId?: number }
+      | undefined,
+    thunkAPI,
+  ): Promise<Task> => {
     const state = thunkAPI.getState() as RootState;
+    await thunkAPI.dispatch(addTask());
+
+    let id: number = 0;
+    if (!data) {
+      const latestSectorTaskId = state.tasks.ids
+        .filter((id) => getTypeGivenId(id) == TaskType.SECTOR)
+        .sort((a, b) => a - b)
+        .pop();
+      if (latestSectorTaskId === undefined) {
+        id = generateIdForPosition(undefined, 1);
+      } else {
+        id = generateSiblingId(latestSectorTaskId);
+      }
+    } else {
+      const { addBeforeId, addAfterId, parentId } = data;
+      if (addBeforeId) {
+        id = addBeforeId;
+      } else if (addAfterId) {
+        id = generateSiblingId(addAfterId);
+      } else if (parentId) {
+        const siblings = state.tasks.ids.filter(
+          (t) => getParentId(t) == parentId,
+        ).length;
+        id = generateIdForPosition(parentId, siblings + 1);
+      }
+    }
     const parentId = getParentId(id);
-    let parent: Task | null = null;
-    if (parentId) parent = state.tasks.entities[parentId];
-    const currentGalaxyId = state.galaxies.currentGalaxyId!;
-    const task: InflatedTask<TaskType> = {
-      galaxyId: currentGalaxyId,
+    const parent = state.tasks.entities[parentId || 0];
+    return {
       id,
       name: "",
       description: "",
+      galaxyId: state.galaxies.currentGalaxyId!,
+      checked: parent?.checked ?? false,
       color: parent?.color ?? 0,
-      checked: false,
       closed: false,
       displayed: true,
     };
+  },
+);
 
+export const addTask = createAsyncThunk(
+  "tasks/addTask",
+  async (
+    _,
+    thunkAPI,
+  ): Promise<
+    { rollforward: BackupAction; addedTaskId: number } | undefined
+  > => {
+    const state = thunkAPI.getState() as RootState;
+    const newTask = state.tasks.newTask;
+    if (!newTask || newTask.name.length == 0) return;
+
+    const bkp: BackupStep = {
+      rollback: { tasksChange: [], tasksAdd: [], tasksDelete: [] },
+      rollforward: { tasksChange: [], tasksAdd: [], tasksDelete: [] },
+    };
+
+    const conflictingTask = state.tasks.entities[newTask.id];
+    if (conflictingTask) {
+    } else {
+      bkp.rollback.tasksDelete?.push(newTask.id);
+      bkp.rollforward.tasksAdd?.push({ ...newTask });
+    }
+
+    const parentId = getParentId(newTask.id);
+    let parent: Task | null = null;
+    if (parentId) parent = state.tasks.entities[parentId];
     // we need to make sure the parent should be visible
     if (parentId && parent && parent.closed) {
       thunkAPI.dispatch(toggleTask({ taskId: parentId, toggle: false }));
     }
 
-    return task;
+    thunkAPI.dispatch(backup(bkp));
+
+    return { rollforward: bkp.rollforward, addedTaskId: 0 };
   },
 );
 
@@ -133,14 +205,33 @@ export const toggleChecked = createAsyncThunk(
 export const moveTask = createAsyncThunk(
   "tasks/moveTask",
   async (
-    { previousId, newId }: { previousId: number; newId: number },
+    {
+      previousId,
+      newType,
+      closestId,
+    }: { previousId: number; newType: TaskType; closestId: number },
     thunkAPI,
-  ) => {
+  ): Promise<TaskChange[] | undefined> => {
     const state = thunkAPI.getState() as RootState;
     const task = state.tasks.entities[previousId];
     if (!task) return;
     const tasks = Object.values(state.tasks.entities);
-    const bkpStep = morphTask(tasks, task, previousId, newId);
+    try {
+      const bkpStep = morphTask(tasks, task, newType, closestId);
+      if (bkpStep) {
+        thunkAPI.dispatch(backup(bkpStep));
+        toast.success("Task moved successfully!");
+      } else {
+        toast.error("Not a valid move: No possible parent.");
+        return undefined;
+      }
+      return bkpStep?.rollforward.tasksChange;
+    } catch (e) {
+      if (e instanceof TooMany) {
+        toast.error(`Not a valid move: ${e.message}`);
+        return undefined;
+      }
+    }
   },
 );
 
@@ -150,20 +241,57 @@ const tasksAdapter = createEntityAdapter<InflatedTask<TaskType>>({
 });
 
 // Selectors
-export const { selectAll: selectAllTasks, selectById: selectTasksById } =
+export const { selectAll: selectAllTasks, selectById: selectTaskById } =
   tasksAdapter.getSelectors((state: any) => state.tasks);
 
 export const selectAllCurrentGalaxyTasksIds = createSelector(
   [selectAllTasks, (state) => state.galaxies.currentGalaxyId],
-  (tasks: Task[], currentGalaxyId: string): Task[] => {
-    return tasks.filter((t) => t.galaxyId == currentGalaxyId);
+  (tasks: Task[], currentGalaxyId: string): number[] => {
+    return tasks
+      .filter((t) => t.galaxyId == currentGalaxyId)
+      .map((t) => t.id)
+      .sort((a, b) => a - b);
+  },
+);
+
+export const selectStatsOfCurrentGalaxy = createSelector(
+  [selectAllTasks],
+  (tasks: Task[]): number[] => {
+    const stats: number[] = [0, 0, 0, 0, 0, 0, 0, 0];
+    for (const task of tasks) {
+      const type = getTypeGivenId(task.id);
+      stats[type * 2] += 1;
+      if (task.checked) {
+        stats[type * 2 + 1] += 1;
+      }
+    }
+    return stats;
+  },
+);
+
+export const selectDirectChildrenOfTask = createSelector(
+  [selectAllTasks, (state, taskId: number) => taskId],
+  (tasks: Task[], taskId: number) => {
+    return tasks.filter((t) => getParentId(t.id) == taskId);
+  },
+);
+
+export const selectStatsOfTask = createSelector(
+  [selectDirectChildrenOfTask],
+  (tasks: Task[]) => {
+    const stats: number[] = [0, 0];
+    for (const task of tasks) {
+      stats[0]++;
+      if (task.checked) stats[1]++;
+    }
+    return stats;
   },
 );
 
 // State
 type ExtraState = {
   edit?: number | undefined;
-  newId?: number | undefined;
+  newTask?: Task | undefined;
   focusId: string;
 };
 export const tasksSlice = createSlice({
@@ -176,9 +304,6 @@ export const tasksSlice = createSlice({
     setFocusIndexDown: (state) => {},
     setFocusIndex: (state, { payload }: { payload: string }) => {
       state.focusId = payload;
-    },
-    setNewId: (state, { payload }: { payload: number | undefined }) => {
-      state.newId = payload;
     },
     toggleTask: (
       state,
@@ -200,38 +325,43 @@ export const tasksSlice = createSlice({
       if (payload.tasksChange)
         tasksAdapter.updateMany(state, payload.tasksChange);
     },
-    setEdit: (state, { payload }: { payload: number | undefined }) => {
-      state.edit = payload;
-      if (state.newId && state.newId !== payload) {
-        const newTask = state.entities[state.newId];
-        if (newTask && newTask.name.length == 0) {
-          tasksAdapter.removeOne(state, newTask.id);
-        }
-        state.newId = undefined;
-      }
-    },
   },
   extraReducers: (builder) => {
     builder.addCase(inflateTasks.fulfilled, (state, action) => {
       tasksAdapter.setAll(state, action.payload);
+      state.newTask = undefined;
+      state.edit = undefined;
       state.focusId =
         action.payload.length > 0
           ? action.payload[0].id.toString()
           : "add-task";
     });
 
-    builder.addCase(addTask.fulfilled, (state, action) => {
+    builder.addCase(setEdit.fulfilled, (state, action) => {
+      state.edit = action.payload;
+    });
+
+    builder.addCase(addNewTask.fulfilled, (state, action) => {
       const task = action.payload;
-      if (state.newId && state.newId != task.id) {
-        const newTask = state.entities[state.newId];
-        if (newTask && newTask.name.length == 0) {
-          tasksAdapter.removeOne(state, newTask.id);
+      state.newTask = task;
+      state.edit = -1;
+      state.focusId = `new-${task.id}`;
+    });
+
+    builder.addCase(addTask.fulfilled, (state, { payload }) => {
+      if (payload) {
+        const { rollforward, addedTaskId } = payload;
+        if (rollforward.tasksDelete)
+          tasksAdapter.removeMany(state, rollforward.tasksDelete);
+        if (rollforward.tasksChange)
+          tasksAdapter.updateMany(state, rollforward.tasksChange);
+        if (rollforward.tasksAdd) {
+          tasksAdapter.addMany(state, rollforward.tasksAdd);
         }
+        state.focusId = addedTaskId.toString();
       }
-      tasksAdapter.addOne(state, task);
-      state.edit = task.id;
-      state.newId = task.id;
-      state.focusId = task.id.toString();
+      state.edit = undefined;
+      state.newTask = undefined;
     });
 
     builder.addCase(
@@ -256,8 +386,6 @@ export const tasksSlice = createSlice({
 export const {
   toggleTask,
   updateTasks,
-  setEdit,
-  setNewId,
   setFocusIndex,
   setFocusIndexUp,
   setFocusIndexDown,

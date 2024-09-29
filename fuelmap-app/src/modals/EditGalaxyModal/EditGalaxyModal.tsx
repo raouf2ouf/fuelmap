@@ -18,8 +18,9 @@ import { useAppDispatch } from "../../store/store";
 import Tooltip from "../../components/Tooltip/Tooltip";
 
 import "./EditGalaxyModal.scss";
+import { loadGalaxy } from "../../store/galaxies.slice";
 type Props = {
-  onDismiss: () => void;
+  onDismiss: (id?: string | undefined) => void;
   galaxy: Galaxy;
 };
 
@@ -32,11 +33,20 @@ const EditGalaxyModal: React.FC<Props> = ({ onDismiss, galaxy }) => {
   );
 
   function handleSubmit() {
+    dispatch(
+      loadGalaxy({
+        ...galaxy,
+        name,
+        description,
+      }),
+    );
     closeModal();
   }
 
   function closeModal() {
-    onDismiss();
+    let id: string | undefined;
+    if (galaxy.name.length == 0) id = galaxy.id;
+    onDismiss(id);
   }
 
   return (

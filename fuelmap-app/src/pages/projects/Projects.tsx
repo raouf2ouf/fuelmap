@@ -13,13 +13,22 @@ import EditGalaxyModal from "../../modals/EditGalaxyModal/EditGalaxyModal";
 import { addSharp, documentSharp } from "ionicons/icons";
 
 import "./Projects.scss";
+import { loadGalaxy } from "../../store/galaxies.slice";
+import { useHistory } from "react-router";
 
 const ProjectsPage: React.FC = () => {
   const dispatch = useAppDispatch();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const history = useHistory();
 
   const [present, dismiss] = useIonModal(EditGalaxyModal, {
-    onDismiss: (data: string, role: string) => dismiss(data, role),
+    onDismiss: (data: string, role: string) => {
+      dismiss(data, role);
+      console.log(data);
+      if (data) {
+        history.push(`/overview/${data}`);
+      }
+    },
     galaxy: {
       id: uuid(),
       name: "",
@@ -43,7 +52,7 @@ const ProjectsPage: React.FC = () => {
       const text = e.target?.result;
       try {
         const json = JSON.parse(text as string);
-        // dispatch(addGalaxyAndLoadChildren(json));
+        dispatch(loadGalaxy(json));
       } catch (error) {
         console.error(error);
       }

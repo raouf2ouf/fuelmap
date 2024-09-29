@@ -8,8 +8,8 @@ type Props = {
   id: number;
   name: string;
   description: string;
-  nbrComments: number;
-  content: string;
+  nbrComments?: number;
+  content?: string;
   checked: boolean;
 };
 const TaskItemEditOff: React.FC<Props> = ({
@@ -27,7 +27,7 @@ const TaskItemEditOff: React.FC<Props> = ({
       <div className="infos-line-1"></div>
       <div className="infos-line-2">
         <TaskStats id={id} />
-        {nbrComments > 0 && <IonIcon icon={chatboxSharp} />}
+        {nbrComments && nbrComments > 0 && <IonIcon icon={chatboxSharp} />}
         {content && <IonIcon icon={documentTextSharp} />}
       </div>
     </div>

@@ -1,5 +1,6 @@
 import { memo } from "react";
 import { useAppSelector } from "../../../store/store";
+import { selectStatsOfTask } from "../../../store/tasks.slice";
 
 type Props = {
   id: number;

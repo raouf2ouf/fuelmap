@@ -32,22 +32,27 @@ import {
 import { useAppDispatch, useAppSelector } from "../../../store/store";
 
 import {
-  addTask,
+  addNewTask,
   deleteTask,
+  selectTaskById,
   setEdit,
   toggleTask,
 } from "../../../store/tasks.slice";
 import { TaskType } from "../../../types/enums";
 import Checkcircle from "../Checkcircle/Checkcircle";
-import { getTypeText } from "../../../store/tasks.utils";
+import { getTypeGivenId, getTypeText } from "../../../store/tasks.utils";
 
 import "./TaskItem.scss";
+import TaskItemEditOn from "./TaskItemEditOn";
+import TaskItemEditOff from "./TaskItemEditOff";
 type Props = {
-  id: string;
+  id: number;
 };
 const TaskItem: React.FC<Props> = ({ id }) => {
   const dispatch = useAppDispatch();
-  const task = useAppSelector((state) => selectTaskById(state, id));
+  const task = useAppSelector(
+    (state) => selectTaskById(state, id) ?? state.tasks.newTask,
+  )!;
   const edit = useAppSelector((state) => state.tasks.edit == task.id);
   const wasOpen = useRef<boolean>(false);
 
@@ -106,7 +111,7 @@ const TaskItem: React.FC<Props> = ({ id }) => {
       case "KeyL":
         if (e.shiftKey) {
           e.stopPropagation();
-          dispatch(moveTaskLeft(task.id));
+          // dispatch(moveTaskLeft(task.id));
         }
         break;
 
@@ -114,7 +119,7 @@ const TaskItem: React.FC<Props> = ({ id }) => {
       case "KeyH":
         if (e.shiftKey) {
           e.stopPropagation();
-          dispatch(moveTaskRight(task.id));
+          // dispatch(moveTaskRight(task.id));
         }
         break;
 
@@ -122,7 +127,7 @@ const TaskItem: React.FC<Props> = ({ id }) => {
       case "KeyK":
         if (e.shiftKey) {
           e.stopPropagation();
-          dispatch(moveTaskUp(task.id));
+          // dispatch(moveTaskUp(task.id));
         }
         break;
 
@@ -130,14 +135,16 @@ const TaskItem: React.FC<Props> = ({ id }) => {
       case "KeyJ":
         if (e.shiftKey) {
           e.stopPropagation();
-          dispatch(moveTaskDown(task.id));
+          // dispatch(moveTaskDown(task.id));
         }
         break;
     }
   }
 
   function handleToggleTask() {
-    dispatch(toggleTask({ taskId: id }));
+    if (id) {
+      dispatch(toggleTask({ taskId: id }));
+    }
   }
 
   function handleToggleEdit() {
@@ -146,28 +153,22 @@ const TaskItem: React.FC<Props> = ({ id }) => {
 
   function handleAddTaskAbove() {
     dispatch(
-      addTask({
-        index: task.index - 0.5,
-        type: task.type,
-        parentId: task.parent!,
+      addNewTask({
+        addAfterId: task.id,
       }),
     );
   }
   function handleAddTaskBelow() {
     dispatch(
-      addTask({
-        index: task.index + 0.5,
-        type: task.type,
-        parentId: task.parent!,
+      addNewTask({
+        addBeforeId: task.id,
       }),
     );
   }
   function handleAddSubTask() {
     dispatch(
-      addTask({
-        index: task.index + 0.5,
-        type: task.type == TaskType.MOON ? TaskType.MOON : task.type + 1,
-        parentId: task.type == TaskType.MOON ? task.parent! : task.id,
+      addNewTask({
+        parentId: task.id,
       }),
     );
   }
@@ -199,8 +200,8 @@ const TaskItem: React.FC<Props> = ({ id }) => {
       {task && task.displayed && (
         <div
           ref={divRef}
-          id={task.id}
-          className={`task-container type${task.type}`}
+          id={`${id ? "" : "new-"}${task.id}`}
+          className={`task-container type${getTypeText(task.id)}`}
           style={
             {
               "--task-color": task.color,
@@ -208,14 +209,13 @@ const TaskItem: React.FC<Props> = ({ id }) => {
             } as any
           }
           role="button"
-          data-type={task.type}
           tabIndex={-1}
           onKeyDown={handleKeydown}
         >
           {/* <IonLabel color="danger">{task.index}</IonLabel> */}
           {/* Toogle */}
           <div className="toggle">
-            {task.type < TaskType.MOON ? (
+            {getTypeGivenId(task.id) < TaskType.MOON ? (
               <IonButton fill="clear" onClick={handleToggleTask}>
                 {task.closed ? (
                   <IonIcon icon={chevronForwardSharp} slot="icon-only" />
@@ -240,23 +240,16 @@ const TaskItem: React.FC<Props> = ({ id }) => {
             {edit ? (
               <TaskItemEditOn
                 id={task.id}
-                type={task.type}
                 name={task.name}
-                description={task.description}
-                labels={task.labels}
+                description={task.description ?? ""}
                 color={task.color}
-                priority={task.priority}
               />
             ) : (
               <TaskItemEditOff
                 id={task.id}
                 name={task.name}
-                description={task.description}
-                nbrComments={task.comments.length}
-                labels={task.labels}
-                content={task.content}
+                description={task.description ?? ""}
                 checked={task.checked}
-                priority={task.priority}
               />
             )}
           </div>

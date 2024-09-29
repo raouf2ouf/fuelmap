@@ -1,6 +1,7 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import type { RootState } from "./store";
 import { BackupStep } from "../types/backup";
+import { updateTasks } from "./tasks.slice";
 
 const MAX_BKP_LENGTH = 9;
 
@@ -20,7 +21,7 @@ export const rollback = createAsyncThunk(
     const step = bkps.pop()!;
     bkpsForward.push(step);
 
-    // TODO
+    thunkAPI.dispatch(updateTasks(step.rollback));
     return { bkps, bkpsForward };
   },
 );
@@ -40,7 +41,7 @@ export const rollforward = createAsyncThunk(
     const step = bkpsForward.pop()!;
     bkps.push(step);
 
-    // TODO
+    thunkAPI.dispatch(updateTasks(step.rollforward));
     return { bkps, bkpsForward };
   },
 );
