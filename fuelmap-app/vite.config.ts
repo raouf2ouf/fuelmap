@@ -2,7 +2,7 @@
 
 import legacy from "@vitejs/plugin-legacy";
 import react from "@vitejs/plugin-react";
-import { defineConfig } from "vite";
+import { defineConfig, loadEnv } from "vite";
 import tsConfigPaths from "vite-tsconfig-paths";
 import type { UserConfig as VitestUserConfig } from "vitest/config";
 import { configDefaults } from "vitest/config";
@@ -29,11 +29,16 @@ const vitestConfig: VitestUserConfig = {
 };
 
 // https://vitejs.dev/config/
-export default defineConfig({
-  plugins: [
-    tsConfigPaths({ projects: ["./tsconfig.json"] }),
-    react(),
-    legacy(),
-  ],
-  // test: vitestConfig.test,
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), "");
+  return {
+    define: {
+      "process.env": env,
+    },
+    plugins: [
+      tsConfigPaths({ projects: ["./tsconfig.json"] }),
+      react(),
+      legacy(),
+    ],
+  };
 });

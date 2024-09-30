@@ -20,14 +20,20 @@ import {
   selectAllGalaxiesIds,
 } from "@store/galaxies.slice";
 import GalaxyCardDisplay from "@components/GalaxyCardDisplay/GalaxyCardDisplay";
+import { useConnectUI, useIsConnected } from "@fuels/react";
 
 const ProjectsPage: React.FC = () => {
-  const isConnected = false;
+  const { isConnected, refetch } = useIsConnected();
+  const { connect } = useConnectUI();
   const dispatch = useAppDispatch();
   const galaxies = useAppSelector(selectAllGalaxiesIds);
   const [showModal, setShowModal] = useState<boolean>(false);
   const [modalData, setModalData] = useState<GalaxyDataExport | undefined>();
   const fileInputRef = useRef(null);
+
+  useEffect(() => {
+    refetch();
+  }, [refetch]);
 
   function createGalaxy() {
     const galaxy = createNewGalaxy("", "", GalaxyTheme.BTL, false);
@@ -54,6 +60,10 @@ const ProjectsPage: React.FC = () => {
       }
     };
     reader.readAsText(file);
+  }
+
+  function handleConnect() {
+    connect();
   }
 
   return (
@@ -110,12 +120,18 @@ const ProjectsPage: React.FC = () => {
                     galaxies.map((gId) => (
                       <GalaxyCardDisplay key={gId} id={gId} />
                     ))}
-                  <IonCard type="button" className="card-button connect-wallet">
-                    <IonCardContent>
-                      <IonIcon icon={walletSharp} />
-                      <div className="title">Connect Wallet</div>
-                    </IonCardContent>
-                  </IonCard>
+                  {!isConnected && (
+                    <IonCard
+                      type="button"
+                      className="card-button connect-wallet"
+                      onClick={handleConnect}
+                    >
+                      <IonCardContent>
+                        <IonIcon icon={walletSharp} />
+                        <div className="title">Connect Wallet</div>
+                      </IonCardContent>
+                    </IonCard>
+                  )}
                 </div>
               </IonAccordion>
             </IonAccordionGroup>

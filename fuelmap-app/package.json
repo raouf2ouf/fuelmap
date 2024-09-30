@@ -30,6 +30,7 @@
     "@wagmi/connectors": "^5.1.14",
     "@wagmi/core": "^2.13.8",
     "date-fns": "^4.1.0",
+    "dotenv": "^16.4.5",
     "fuels": "^0.94.8",
     "ionicons": "^7.0.0",
     "react": "^18.2.0",
