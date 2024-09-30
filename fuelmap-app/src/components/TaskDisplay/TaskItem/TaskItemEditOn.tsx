@@ -1,25 +1,47 @@
-import { TaskColor, TaskType } from "../../../types/enums";
-import { IonButton, IonIcon, IonInput, IonTextarea } from "@ionic/react";
-import { memo, useRef, useState } from "react";
+import {
+  InputChangeEventDetail,
+  IonButton,
+  IonIcon,
+  IonInput,
+  IonTextarea,
+  TextareaChangeEventDetail,
+} from "@ionic/react";
+import { TaskColor, TaskType } from "@models/task/task.enums";
+import { FormEvent, memo, useRef, useState } from "react";
 
 import "./TaskItemEditOn.scss";
-import { useAppDispatch } from "../../../store/store";
-import { setEdit } from "../../../store/tasks.slice";
-import { Task } from "../../../types/task";
+import ChipPicker from "../ChipPicker/ChipPicker";
+import PriorityPicker from "../Priority/PriorityPicker";
 import { checkmarkSharp, closeSharp } from "ionicons/icons";
-import ColorPicker from "../../ColorPicker/ColorPicker";
-import { getTypeGivenId } from "../../../store/tasks.utils";
+import ColorPicker from "../ColorPicker/ColorPicker";
+import { Task } from "@models/task/task";
+import { useAppDispatch } from "@store/store";
+import { setEdit, updateAndBackupTask } from "@store/tasks.slice";
+
 type Props = {
-  id: number;
+  id: string;
+  type: TaskType;
   name: string;
   description: string;
-  color: number;
+  color: TaskColor;
+  labels: string[];
+  priority: number;
 };
-const TaskItemEditOn: React.FC<Props> = ({ id, name, description, color }) => {
+const TaskItemEditOn: React.FC<Props> = ({
+  id,
+  type,
+  name,
+  description,
+  color,
+  labels,
+  priority,
+}) => {
   const dispatch = useAppDispatch();
   const [nameE, setNameE] = useState<string>(name);
   const [descriptionE, setDescriptionE] = useState<string>(description);
-  const [colorE, setColorE] = useState<number>(color);
+  const [colorE, setColorE] = useState<TaskColor>(color);
+  const [labelsE, setLabelsE] = useState<string[]>([...labels]);
+  const [priorityE, setPriorityE] = useState<number>(priority);
 
   const confirmRef = useRef<HTMLIonButtonElement>(null);
 
@@ -56,13 +78,24 @@ const TaskItemEditOn: React.FC<Props> = ({ id, name, description, color }) => {
       changes.color = colorE;
       previousValues.color = color;
     }
+    if (
+      labelsE.length != labels.length ||
+      !labelsE.every((e) => labels.includes(e))
+    ) {
+      changes.labels = labelsE;
+      previousValues.labels = labels;
+    }
+    if (priorityE != priority) {
+      changes.priority = priorityE;
+      previousValues.priority = priority;
+    }
     if (Object.keys(changes).length > 0) {
       // something changed
       dispatch(
         updateAndBackupTask({
           rollback: { id, changes: previousValues },
           rollforward: { id, changes },
-        }),
+        })
       );
     }
     dispatch(setEdit());
@@ -117,9 +150,13 @@ const TaskItemEditOn: React.FC<Props> = ({ id, name, description, color }) => {
           onKeyDown={handleDescriptionKeydown}
         />
       </div>
+      <div className="labels">
+        <ChipPicker labels={labelsE} onChange={setLabelsE} />
+      </div>
       <div className="toolbar">
+        <PriorityPicker priority={priorityE} onChange={setPriorityE} />
         <div className="toolbar-specific">
-          {getTypeGivenId(id) == TaskType.SECTOR && (
+          {type == TaskType.SECTOR && (
             <ColorPicker color={colorE} onChange={setColorE} />
           )}
         </div>

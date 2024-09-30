@@ -1,20 +1,18 @@
-import { memo, useMemo } from "react";
-
-import { IonButton, IonIcon } from "@ionic/react";
-import { downloadSharp, saveSharp } from "ionicons/icons";
-
-import { useAppDispatch, useAppSelector } from "../../store/store";
+import { memo } from "react";
 
 import "./SaveDisplay.scss";
+import { useAppDispatch, useAppSelector } from "@store/store";
 import {
   downloadCurrentGalaxy,
   saveCurrentGalaxyLocally,
-  selectCurrentGalaxy,
-} from "../../store/galaxies.slice";
-
+  selectCurrentGalaxySaveStatus,
+} from "@store/galaxies.slice";
+import { IonButton, IonIcon } from "@ionic/react";
+import { downloadSharp, saveSharp } from "ionicons/icons";
+import { SaveStatus } from "@models/galaxy";
 const SaveDisplay: React.FC = () => {
   const dispatch = useAppDispatch();
-  const currentGalaxy = useAppSelector(selectCurrentGalaxy);
+  const saveStatus = useAppSelector(selectCurrentGalaxySaveStatus);
 
   function handleSaveLocally() {
     dispatch(saveCurrentGalaxyLocally());
@@ -28,17 +26,17 @@ const SaveDisplay: React.FC = () => {
       <div className="save-display">
         <IonButton
           fill="clear"
-          disabled={!currentGalaxy?.needToSave}
+          disabled={saveStatus != SaveStatus.NEED_TO_SAVE}
           onClick={handleSaveLocally}
         >
           <IonIcon icon={saveSharp} slot="icon-only" />
         </IonButton>
-        {currentGalaxy?.needToSave && <div className="indicator" />}
+        {saveStatus == SaveStatus.NEED_TO_SAVE && <div className="indicator" />}
       </div>
       <IonButton
         fill="clear"
         onClick={handleDownload}
-        disabled={!currentGalaxy}
+        disabled={saveStatus == undefined}
       >
         <IonIcon icon={downloadSharp} slot="icon-only" />
       </IonButton>

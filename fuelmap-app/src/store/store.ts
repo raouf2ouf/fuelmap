@@ -1,13 +1,18 @@
+"use client";
 import { combineReducers, configureStore } from "@reduxjs/toolkit";
 import { TypedUseSelectorHook, useDispatch, useSelector } from "react-redux";
-import galaxiesReducer from "./galaxies.slice";
-import backupReducer from "./backup.slice";
-import tasksReducer from "./tasks.slice";
+import tasksSlice from "./tasks.slice";
+import galaxiesSlice from "./galaxies.slice";
+import backupSlice from "./backup.slice";
+import hexesSlice from "./hexes.slice";
+import territoriesSlice from "./territories.slice";
 
 const rootReducer = combineReducers({
-  backup: backupReducer,
-  galaxies: galaxiesReducer,
-  tasks: tasksReducer,
+  galaxies: galaxiesSlice,
+  tasks: tasksSlice,
+  backup: backupSlice,
+  hexes: hexesSlice,
+  territories: territoriesSlice,
 });
 
 export const setupStore = (preloadedState?: any) => {

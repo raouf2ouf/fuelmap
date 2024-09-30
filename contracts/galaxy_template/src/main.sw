@@ -6,6 +6,7 @@ use errors::{TaskError};
 use std::{hash::Hash, storage::storage_string::*, string::String};
 use std::storage::storage_vec::*;
 use std::vec::Vec;
+use std::logging::log;
 
 
 struct Task {
@@ -18,6 +19,11 @@ struct UpdateTask {
     id: u16, // 12 bit (2 bytes) id
     checked: Option<bool>, //1 byte for checked or not
     name: Option<String> // string
+}
+
+struct Comment {
+    id: u16,
+    message: String,
 }
 
 enum TaskAction {
@@ -46,6 +52,13 @@ abi GalaxyTemplate {
 
     #[storage(read,write)]
     fn batch_update(actions: Vec<TaskAction>);
+
+    fn comment(id: u16, message: String);
+
+    #[storage(write)]
+    fn set_name(name: String);
+
+    fn set_description(description: String);
 }
 
 #[storage(read,write)]
@@ -79,7 +92,25 @@ fn _get_task(id: u16) -> Option<Task> {
         return Option::Some(task);
     }
 }
+
 impl GalaxyTemplate for Contract {
+    fn comment(id: u16, message: String) {
+        let c = Comment {
+            id: id,
+            message: message
+        };
+        log(c);
+    }
+
+    fn set_description(description: String) {
+        log(description);
+    }
+
+    #[storage(write)]
+    fn set_name(name: String) {
+        storage.name.write_slice(name);
+    }
+
     #[storage(read, write)]
     fn add_task(id: u16, checked: bool, name: String) -> Task {
         _add_task(id, checked, name)

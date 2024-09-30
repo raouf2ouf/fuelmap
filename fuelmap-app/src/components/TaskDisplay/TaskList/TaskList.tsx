@@ -1,25 +1,23 @@
-import { memo, useEffect, useRef } from "react";
-import { useAppDispatch, useAppSelector } from "../../../store/store";
-import "./TaskList.scss";
-import { attachDndZoneListeners } from "../../../hooks/dnd-hook";
-import { TaskType } from "../../../types/enums";
+import { useAppDispatch, useAppSelector } from "@store/store";
 import {
   moveTask,
   selectAllCurrentGalaxyTasksIds,
   setFocusIndexDown,
   setFocusIndexUp,
-} from "../../../store/tasks.slice";
-import { DRAG_ENDED_EVENT } from "../../../hooks/dnd.helpers";
-import { saveCurrentGalaxyLocally } from "../../../store/galaxies.slice";
-import { rollback, rollforward } from "../../../store/backup.slice";
+} from "@store/tasks.slice";
+import { memo, useEffect, useRef } from "react";
+import { DRAG_ENDED_EVENT } from "src/hooks/dnd.helpers";
 import TaskItem from "../TaskItem/TaskItem";
+import { attachDndZoneListeners } from "src/hooks/dnd-hook";
+import { TaskType } from "@models/task/task.enums";
 import AddTask from "./AddTask";
+
+import "./TaskList.scss";
+import { saveCurrentGalaxyLocally } from "@store/galaxies.slice";
+import { rollback, rollforward } from "@store/backup.slice";
 const TaskList: React.FC = () => {
   const dispatch = useAppDispatch();
-  const tasks: number[] = useAppSelector(selectAllCurrentGalaxyTasksIds);
-  const newTaskId: number | undefined = useAppSelector(
-    (state) => state.tasks.newTask?.id,
-  );
+  const tasks: string[] = useAppSelector(selectAllCurrentGalaxyTasksIds);
   const focusId = useAppSelector((state) => state.tasks.focusId);
   const edit = useAppSelector((state) => state.tasks.edit);
 
@@ -56,7 +54,7 @@ const TaskList: React.FC = () => {
           newType,
           previousDisplayIdx: startIdx,
           newDisplayIdx: endIdx,
-        }),
+        })
       );
       setTimeout(() => {
         document.getElementById(taskId)?.focus();
@@ -109,11 +107,7 @@ const TaskList: React.FC = () => {
   return (
     <>
       <div ref={divRef} onKeyDown={handleKeydown}>
-        {[...(tasks || []), ...(newTaskId ? [newTaskId] : [])]
-          .sort((a, b) => a - b)
-          .map((t) => (
-            <TaskItem id={t} key={t} />
-          ))}
+        {tasks && tasks.map((t) => <TaskItem id={t} key={t} />)}
         <AddTask />
       </div>
     </>

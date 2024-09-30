@@ -1,0 +1,37 @@
+.mini-map-container {
+  .mini-map {
+    padding: 16px 8px;
+    background-color: var(--background-color-dark);
+    svg {
+      .hex {
+        fill: rgba(var(--background-color-light-rgb), 0.3);
+        stroke-width: 10px;
+        stroke: rgba(var(--background-color-light-rgb), 1);
+        &.used {
+          fill: transparent;
+          stroke: rgba(var(--background-color-light-rgb), 0.2);
+        }
+      }
+      .system {
+        polygon {
+          fill: var(--color);
+          stroke: var(--color);
+        }
+        circle {
+          fill: var(--color);
+        }
+      }
+      .territory {
+        polygon.user {
+          stroke-width: 10;
+          stroke: var(--color-pure);
+        }
+        polygon.empty {
+          stroke-width: 5;
+          stroke: var(--color-pure);
+          fill: var(--color);
+        }
+      }
+    }
+  }
+}

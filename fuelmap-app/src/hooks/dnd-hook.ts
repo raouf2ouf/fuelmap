@@ -1,11 +1,12 @@
+import { RefObject, useEffect } from "react";
 import { dndHandler } from "./dnd.handler";
 import {
   handleChildPointerDown,
   removeWindowEventListeners,
-} from "./dnd.listeners";
+} from "./dnd.listener";
 
 export function attachDndChildListeners(
-  node: HTMLDivElement | null,
+  node: HTMLDivElement | null
 ): () => void {
   if (node) {
     node.style.transition = "transform 200ms";
@@ -25,11 +26,12 @@ export function attachDndChildListeners(
 }
 
 export function attachDndZoneListeners(
-  node: HTMLDivElement | null,
+  node: HTMLDivElement | null
 ): () => void {
   if (node) {
     dndHandler.container = node;
   }
+
   return () => {
     removeWindowEventListeners();
   };

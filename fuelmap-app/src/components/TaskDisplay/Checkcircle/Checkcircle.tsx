@@ -1,23 +1,23 @@
+import { TaskType } from "@models/task/task.enums";
+import { getTypeText } from "@models/task/task.utils";
 import { IonIcon } from "@ionic/react";
 import { checkmarkSharp } from "ionicons/icons";
 import { memo } from "react";
-import { TaskType } from "../../../types/enums";
-import { useAppDispatch } from "../../../store/store";
-import { toggleChecked } from "../../../store/tasks.slice";
-import { getTypeText } from "../../../store/tasks.utils";
 
 import "./Checkcircle.scss";
-
+import { useAppDispatch } from "@store/store";
+import { toggleChecked } from "@store/tasks.slice";
 type Props = {
-  id: number;
+  id: string;
+  type: TaskType;
   checked: boolean;
 };
 
-const Checkcircle: React.FC<Props> = ({ id, checked }) => {
+const Checkcircle: React.FC<Props> = ({ id, type, checked }) => {
   const dispatch = useAppDispatch();
 
   function handleToggleChecked() {
-    dispatch(toggleChecked({ id }));
+    dispatch(toggleChecked({ taskId: id }));
   }
 
   function handleKeydown(e: React.KeyboardEvent) {
@@ -40,7 +40,7 @@ const Checkcircle: React.FC<Props> = ({ id, checked }) => {
           </div>
         )}
       </div>
-      <div className={getTypeText(id)}>
+      <div className={getTypeText(type)}>
         <div className="inside"></div>
       </div>
     </div>

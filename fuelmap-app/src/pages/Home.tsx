@@ -20,17 +20,17 @@ import {
   menuSharp,
 } from "ionicons/icons";
 import { Redirect, Route, useHistory } from "react-router";
-import { useEffect } from "react";
-
-import SideMenu from "../components/SideMenu/SideMenu";
 
 import "./Home.scss";
-import Projects from "./projects/Projects";
-import { useAppDispatch, useAppSelector } from "../store/store";
-import { loadLocalGalaxies, setCurrentGalaxy } from "../store/galaxies.slice";
-import BackupDisplay from "../components/BackupDisplay/BackupDisplay";
-import SaveDisplay from "../components/SaveDisplay/SaveDisplay";
-import Overview from "./overview/Overview";
+import SideMenu from "../components/SideMenu/SideMenu";
+import ProjectsPage from "./projects/ProjectsPage";
+import MapPage from "./map/MapPage";
+import OverviewPage from "./overview/OverviewPage";
+import BackupDisplay from "@components/BackupDisplay/BackupDisplay";
+import SaveDisplay from "@components/SaveDisplay/SaveDisplay";
+import { useEffect } from "react";
+import { useAppDispatch, useAppSelector } from "@store/store";
+import { addLocalGalaxies, setCurrentGalaxy } from "@store/galaxies.slice";
 
 function extractGalaxyIdFromPathname(pathname: string): string | undefined {
   let galaxyId: string | undefined;
@@ -45,9 +45,10 @@ function extractGalaxyIdFromPathname(pathname: string): string | undefined {
 }
 
 const Home: React.FC = () => {
-  const version = "0.1.0";
   const dispatch = useAppDispatch();
-  const currentGalaxyId: string | undefined = useAppSelector(
+  const version = "0.1.0";
+
+  const currentGalaxyId = useAppSelector(
     (state) => state.galaxies.currentGalaxyId,
   );
 
@@ -55,9 +56,7 @@ const Home: React.FC = () => {
 
   useEffect(() => {
     const galaxyId = extractGalaxyIdFromPathname(location.pathname);
-    if (galaxyId) {
-      dispatch(loadLocalGalaxies(galaxyId));
-    }
+    dispatch(addLocalGalaxies(galaxyId));
   }, []);
 
   useEffect(() => {
@@ -112,8 +111,9 @@ const Home: React.FC = () => {
           <IonTabs>
             <IonRouterOutlet>
               <Redirect exact path="/" to="/projects" />
-              <Route path="/projects" render={() => <Projects />} />
-              <Route path="/overview" render={() => <Overview />} />
+              <Route path="/projects" render={() => <ProjectsPage />} />
+              <Route path="/map" render={() => <MapPage />} />
+              <Route path="/overview" render={() => <OverviewPage />} />
             </IonRouterOutlet>
             <IonTabBar slot="bottom">
               <IonTabButton

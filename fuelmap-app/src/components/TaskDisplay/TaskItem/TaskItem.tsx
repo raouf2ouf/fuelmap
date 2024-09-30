@@ -1,5 +1,35 @@
-import { memo, useEffect, useRef } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
+import { DragEvent } from "react";
 
+import "./TaskItem.scss";
+import { useAppDispatch, useAppSelector } from "@store/store";
+import {
+  addTask,
+  deleteTask,
+  moveTask,
+  moveTaskDown,
+  moveTaskLeft,
+  moveTaskRight,
+  moveTaskUp,
+  selectTaskById,
+  setEdit,
+  toggleChecked,
+  toggleTask,
+} from "@store/tasks.slice";
+import { getTypeText } from "@models/task/task.utils";
+import Checkcircle from "@components/TaskDisplay/Checkcircle/Checkcircle";
+import {
+  IonAlert,
+  IonButton,
+  IonContent,
+  IonIcon,
+  IonItem,
+  IonItemDivider,
+  IonLabel,
+  IonList,
+  IonPopover,
+  useIonAlert,
+} from "@ionic/react";
 import {
   chevronDownSharp,
   chevronForwardSharp,
@@ -12,47 +42,18 @@ import {
   returnUpBackSharp,
   trashSharp,
 } from "ionicons/icons";
-import {
-  IonButton,
-  IonContent,
-  IonIcon,
-  IonItem,
-  IonLabel,
-  IonList,
-  IonPopover,
-  useIonAlert,
-} from "@ionic/react";
-
-import { attachDndChildListeners } from "../../../hooks/dnd-hook";
-import {
-  DRAG_ENDED_EVENT,
-  DRAG_STARTED_EVENT,
-} from "../../../hooks/dnd.helpers";
-
-import { useAppDispatch, useAppSelector } from "../../../store/store";
-
-import {
-  addNewTask,
-  deleteTask,
-  selectTaskById,
-  setEdit,
-  toggleTask,
-} from "../../../store/tasks.slice";
-import { TaskType } from "../../../types/enums";
-import Checkcircle from "../Checkcircle/Checkcircle";
-import { getTypeGivenId, getTypeText } from "../../../store/tasks.utils";
-
-import "./TaskItem.scss";
-import TaskItemEditOn from "./TaskItemEditOn";
 import TaskItemEditOff from "./TaskItemEditOff";
+import { TaskType } from "@models/task/task.enums";
+import { DRAG_ENDED_EVENT, DRAG_STARTED_EVENT } from "src/hooks/dnd.helpers";
+import { attachDndChildListeners } from "src/hooks/dnd-hook";
+import TaskItemEditOn from "./TaskItemEditOn";
+
 type Props = {
-  id: number;
+  id: string;
 };
 const TaskItem: React.FC<Props> = ({ id }) => {
   const dispatch = useAppDispatch();
-  const task = useAppSelector(
-    (state) => selectTaskById(state, id) ?? state.tasks.newTask,
-  )!;
+  const task = useAppSelector((state) => selectTaskById(state, id));
   const edit = useAppSelector((state) => state.tasks.edit == task.id);
   const wasOpen = useRef<boolean>(false);
 
@@ -111,7 +112,7 @@ const TaskItem: React.FC<Props> = ({ id }) => {
       case "KeyL":
         if (e.shiftKey) {
           e.stopPropagation();
-          // dispatch(moveTaskLeft(task.id));
+          dispatch(moveTaskLeft(task.id));
         }
         break;
 
@@ -119,7 +120,7 @@ const TaskItem: React.FC<Props> = ({ id }) => {
       case "KeyH":
         if (e.shiftKey) {
           e.stopPropagation();
-          // dispatch(moveTaskRight(task.id));
+          dispatch(moveTaskRight(task.id));
         }
         break;
 
@@ -127,7 +128,7 @@ const TaskItem: React.FC<Props> = ({ id }) => {
       case "KeyK":
         if (e.shiftKey) {
           e.stopPropagation();
-          // dispatch(moveTaskUp(task.id));
+          dispatch(moveTaskUp(task.id));
         }
         break;
 
@@ -135,16 +136,14 @@ const TaskItem: React.FC<Props> = ({ id }) => {
       case "KeyJ":
         if (e.shiftKey) {
           e.stopPropagation();
-          // dispatch(moveTaskDown(task.id));
+          dispatch(moveTaskDown(task.id));
         }
         break;
     }
   }
 
   function handleToggleTask() {
-    if (id) {
-      dispatch(toggleTask({ taskId: id }));
-    }
+    dispatch(toggleTask({ taskId: id }));
   }
 
   function handleToggleEdit() {
@@ -153,23 +152,29 @@ const TaskItem: React.FC<Props> = ({ id }) => {
 
   function handleAddTaskAbove() {
     dispatch(
-      addNewTask({
-        addAfterId: task.id,
-      }),
+      addTask({
+        index: task.index - 0.5,
+        type: task.type,
+        parentId: task.parent!,
+      })
     );
   }
   function handleAddTaskBelow() {
     dispatch(
-      addNewTask({
-        addBeforeId: task.id,
-      }),
+      addTask({
+        index: task.index + 0.5,
+        type: task.type,
+        parentId: task.parent!,
+      })
     );
   }
   function handleAddSubTask() {
     dispatch(
-      addNewTask({
-        parentId: task.id,
-      }),
+      addTask({
+        index: task.index + 0.5,
+        type: task.type == TaskType.MOON ? TaskType.MOON : task.type + 1,
+        parentId: task.type == TaskType.MOON ? task.parent! : task.id,
+      })
     );
   }
   function handleDeleteTask() {
@@ -200,8 +205,8 @@ const TaskItem: React.FC<Props> = ({ id }) => {
       {task && task.displayed && (
         <div
           ref={divRef}
-          id={`${id ? "" : "new-"}${task.id}`}
-          className={`task-container type${getTypeText(task.id)}`}
+          id={task.id}
+          className={`task-container type${task.type}`}
           style={
             {
               "--task-color": task.color,
@@ -209,13 +214,14 @@ const TaskItem: React.FC<Props> = ({ id }) => {
             } as any
           }
           role="button"
+          data-type={task.type}
           tabIndex={-1}
           onKeyDown={handleKeydown}
         >
           {/* <IonLabel color="danger">{task.index}</IonLabel> */}
           {/* Toogle */}
           <div className="toggle">
-            {getTypeGivenId(task.id) < TaskType.MOON ? (
+            {task.type < TaskType.MOON ? (
               <IonButton fill="clear" onClick={handleToggleTask}>
                 {task.closed ? (
                   <IonIcon icon={chevronForwardSharp} slot="icon-only" />
@@ -230,26 +236,33 @@ const TaskItem: React.FC<Props> = ({ id }) => {
             )}
           </div>
           {/* Checkbox */}
-          <Checkcircle id={task.id} checked={task.checked} />
+          <Checkcircle id={task.id} checked={task.checked} type={task.type} />
 
           {/* Task Type */}
-          <div className="type-text hide-sm">{getTypeText(task.id)}</div>
+          <div className="type-text hide-sm">{getTypeText(task.type)}</div>
 
           {/* Task Text and Description */}
           <div className="task-content">
             {edit ? (
               <TaskItemEditOn
                 id={task.id}
+                type={task.type}
                 name={task.name}
-                description={task.description ?? ""}
+                description={task.description}
+                labels={task.labels}
                 color={task.color}
+                priority={task.priority}
               />
             ) : (
               <TaskItemEditOff
                 id={task.id}
                 name={task.name}
-                description={task.description ?? ""}
+                description={task.description}
+                nbrComments={task.comments.length}
+                labels={task.labels}
+                content={task.content}
                 checked={task.checked}
+                priority={task.priority}
               />
             )}
           </div>

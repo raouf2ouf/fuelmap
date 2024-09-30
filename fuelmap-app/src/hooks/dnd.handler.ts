@@ -1,4 +1,4 @@
-import { TaskType } from "../types/enums";
+import { TaskType } from "@models/task/task.enums";
 import {
   MutableDOMRect,
   createDraggedElementFrom,
@@ -33,7 +33,6 @@ export class DnDHander {
   public placeholder: HTMLElement;
   public placeholderType?: TaskType;
   private placeholderIdx?: number;
-  private closestId?: number | undefined;
 
   private distanceBetweenTypes = 32;
 
@@ -132,7 +131,6 @@ export class DnDHander {
         this.placeholderType!,
         this.originalElIdx!,
         this.placeholderIdx!,
-        this.closestId,
       );
       this.container!.removeChild(this.placeholder);
       this.placeholder.style.transform = "";
@@ -222,15 +220,9 @@ export class DnDHander {
       let dy = closestRect.top - placeholderRect.top;
       let placeholderHeight = placeholderRect.height;
       if (dy < 0) {
-        // we went up
-        // if we are not at the top no need to move (we moved the mouse up but not above the half-way mark of the todo on top)
+        // if we are not at the top no need to move
         if (lastOffset! > lastBox!.height / 2) return;
-        if (idx == 0) {
-          this.closestId = undefined;
-        } else {
-          this.closestId = Number(this.children[idx - 1].id);
-        }
-
+        // we went up
         moveElement(this.placeholder, dy, placeholderRect);
         for (let i = this.placeholderIdx!; i > idx; i--) {
           const child = this.children[i - 1];
@@ -239,9 +231,7 @@ export class DnDHander {
         }
       } else {
         // we went down
-        // if we are not at the bottom no need to move (we moved the mouse down but not below the half-way mark of the todo on top)
         if (lastOffset! < lastBox!.height / 2) return;
-        this.closestId = Number(closest.id);
         dy = closestRect.bottom - placeholderRect.top - placeholderHeight;
         placeholderHeight *= -1;
         moveElement(this.placeholder, dy, placeholderRect);

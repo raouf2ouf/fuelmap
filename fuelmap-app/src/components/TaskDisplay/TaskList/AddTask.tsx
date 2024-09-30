@@ -1,22 +1,31 @@
 import { IonButton, IonIcon, IonLabel } from "@ionic/react";
+import { TaskType } from "@models/task/task.enums";
+import { useAppDispatch, useAppSelector } from "@store/store";
+import { addTask } from "@store/tasks.slice";
 import { addSharp } from "ionicons/icons";
-import { memo, useRef } from "react";
-import { useAppDispatch } from "../../../store/store";
-import { addNewTask, addTask } from "../../../store/tasks.slice";
+import { memo, useEffect, useRef } from "react";
 
 const AddTask: React.FC = () => {
   const dispatch = useAppDispatch();
 
+  const focusId = useAppSelector((state) => state.tasks.focusId);
+
   const divRef = useRef<HTMLIonButtonElement>(null);
+
+  // useEffect(() => {
+  //   if (nbrTasks == focusIdx && divRef.current) {
+  //     divRef.current.focus();
+  //   }
+  // }, [nbrTasks, focusIdx]);
 
   function handleAddTask(e: any) {
     if (e.code) {
       if (e.code == "Enter") {
         e.stopPropagation();
-        dispatch(addNewTask());
+        dispatch(addTask({ type: TaskType.SECTOR, parentId: "" }));
       }
     } else {
-      dispatch(addNewTask());
+      dispatch(addTask({ type: TaskType.SECTOR, parentId: "" }));
     }
   }
   return (

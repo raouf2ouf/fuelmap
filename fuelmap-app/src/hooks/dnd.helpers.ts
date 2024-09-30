@@ -1,4 +1,4 @@
-import { TaskType } from "../types/enums";
+import { TaskType } from "@models/task/task.enums";
 
 export const DRAG_STARTED_EVENT = "customDragStarted";
 export const DRAG_ENDED_EVENT = "customDragEnded";
@@ -20,13 +20,12 @@ export function dispatchDragEnded(
   oldType?: TaskType,
   newType?: TaskType,
   startIdx?: number,
-  endIdx?: number,
-  closestId?: number | undefined,
+  endIdx?: number
 ) {
   el.dispatchEvent(
     new CustomEvent(DRAG_ENDED_EVENT, {
-      detail: { taskId, newType, oldType, startIdx, endIdx, closestId },
-    }),
+      detail: { taskId, newType, oldType, startIdx, endIdx },
+    })
   );
 }
 
@@ -36,7 +35,7 @@ function copyStylesFrom(fromEl: HTMLElement, toEl: HTMLElement) {
     toEl.style.setProperty(
       prop,
       computedStyle.getPropertyValue(prop),
-      computedStyle.getPropertyPriority(prop),
+      computedStyle.getPropertyPriority(prop)
     );
   });
   // nested elements
@@ -78,7 +77,7 @@ export function hideElement(el: HTMLElement): string {
 export function moveElement(
   el: HTMLElement,
   dy: number,
-  rect: MutableDOMRect,
+  rect: MutableDOMRect
 ): void {
   const newY = rect.translate + dy;
   el.style.transform = `translateY(${newY}px)`;

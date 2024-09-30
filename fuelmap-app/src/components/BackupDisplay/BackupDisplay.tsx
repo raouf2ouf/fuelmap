@@ -7,14 +7,13 @@ import {
   arrowRedoSharp,
   arrowUndoSharp,
 } from "ionicons/icons";
-import { useAppDispatch, useAppSelector } from "../../store/store";
-import { rollback, rollforward } from "../../store/backup.slice";
-
+import { useAppDispatch, useAppSelector } from "@store/store";
+import { rollback, rollforward } from "@store/backup.slice";
 const BackupDisplay: React.FC = () => {
   const dispatch = useAppDispatch();
   const canGoBack = useAppSelector((state) => state.backup.bkps.length > 0);
   const canGoForward = useAppSelector(
-    (state) => state.backup.bkpsForward.length > 0,
+    (state) => state.backup.bkpsForward.length > 0
   );
 
   function handleRollback() {
