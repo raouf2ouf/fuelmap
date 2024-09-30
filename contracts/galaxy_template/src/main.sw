@@ -5,6 +5,7 @@ mod errors;
 use errors::{TaskError};
 use std::{hash::Hash, storage::storage_string::*, string::String};
 use std::storage::storage_vec::*;
+use std::vec::Vec;
 
 
 struct Task {
@@ -40,11 +41,55 @@ abi GalaxyTemplate {
     #[storage(read)]
     fn get_task(id: u16) -> Option<Task>;
 
+    #[storage(read)]
+    fn get_tasks() -> Vec<Task>;
+
     #[storage(read,write)]
     fn batch_update(actions: Vec<TaskAction>);
 }
 
+#[storage(read,write)]
+fn _add_task(id: u16, checked: bool, name: String) -> Task {
+    let nbr: u16 = storage.tasks_count.read();
+
+    storage.tasks_ids.push(id);
+    storage.tasks_checked.insert(id, checked);
+    storage.tasks_names.get(id).write_slice(name);
+    storage.tasks_count.write(storage.tasks_count.read() + 1);
+    let task = Task {
+        id: id,
+        checked: checked,
+        name: name
+    };
+    return task;
+}
+
+#[storage(read)]
+fn _get_task(id: u16) -> Option<Task> {
+    let checked = storage.tasks_checked.get(id).try_read();
+    if checked.is_none() {
+        return Option::None;
+    } else {
+        let name = storage.tasks_names.get(id).read_slice().unwrap();
+        let task = Task {
+            id: id,
+            checked: checked.unwrap(),
+            name: name,
+        };
+        return Option::Some(task);
+    }
+}
 impl GalaxyTemplate for Contract {
+    #[storage(read, write)]
+    fn add_task(id: u16, checked: bool, name: String) -> Task {
+        _add_task(id, checked, name)
+    }
+
+    #[storage(read)]
+    fn get_task(id: u16) -> Option<Task> {
+        _get_task(id)
+    }
+
     #[storage(read,write)]
     fn batch_update(actions: Vec<TaskAction>) {
         for action in actions.iter() {
@@ -53,10 +98,7 @@ impl GalaxyTemplate for Contract {
                     require(task.id < 4096, TaskError::IdOutOfBounds);
                     //add_task(task.id, task.checked, task.name); // does not work for some reason
                     let nbr: u16 = storage.tasks_count.read();
-
-                    storage.tasks_checked.insert(task.id, task.checked);
-                    storage.tasks_names.get(task.id).write_slice(task.name);
-                    storage.tasks_count.write(storage.tasks_count.read() + 1);
+                    let t = _add_task(task.id, task.checked, task.name);
                 },
                 TaskAction::Update(task) => {
                     if let Some(new_checked) = task.checked {
@@ -74,34 +116,18 @@ impl GalaxyTemplate for Contract {
         }
     }
 
-    #[storage(read, write)]
-    fn add_task(id: u16, checked: bool, name: String) -> Task {
-        let nbr: u16 = storage.tasks_count.read();
-
-        storage.tasks_checked.insert(id, checked);
-        storage.tasks_names.get(id).write_slice(name);
-        storage.tasks_count.write(storage.tasks_count.read() + 1);
-        let task = Task {
-            id: id,
-            checked: checked,
-            name: name
-        };
-        return task
-    }
 
     #[storage(read)]
-    fn get_task(id: u16) -> Option<Task> {
-        let checked = storage.tasks_checked.get(id).try_read();
-        if checked.is_none() {
-            return Option::None;
-        } else {
-            let name = storage.tasks_names.get(id).read_slice().unwrap();
-            let task = Task {
-                id: id,
-                checked: checked.unwrap(),
-                name: name,
-            };
-            Option::Some(task)
+    fn get_tasks() -> Vec<Task> {
+        let mut result: Vec<Task> = Vec::new();
+        let mut i = 0;
+        let length = storage.tasks_ids.len();
+        while i < length {
+            let id = storage.tasks_ids.get(i).unwrap().read();
+            let task = _get_task(id).unwrap();
+            result.push(task);
+            i += 1;
         }
+        return result;
     }
 }
