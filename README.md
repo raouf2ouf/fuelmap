@@ -14,7 +14,7 @@ This project for the **Encode x Fuel Hackathon** introduces three novel ideas:
 
 ## Links
 
-- [Demo Video]()
+- [Demo Video](https://youtu.be/WJDnD_d3iYM)
 
 ## Table of Content
 
