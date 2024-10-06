@@ -7,9 +7,11 @@ This project for the **Encode x Fuel Hackathon** introduces three novel ideas:
 - **Instantialbe NFTs**: NFTs can be 'instantiated' from an existing NFT. eg. a map NFT produced by user A can be 'copied' by user B (given some fee) where user B can also follow his progress on the same project.
 - **Community Interaction**: Users can comment on the nfts (given some fee) and their comments are recorded in the fuel chain logs.
 
-![screenshot-1](./screenshots/screenshot-1.png)
+![SRC20](./screenshots/src20-ownable.png)
+
+<!--![screenshot-1](./screenshots/screenshot-1.png)
 ![screenshot-2](./screenshots/screenshot-2.png)
-![screenshot-3](./screenshots/screenshot-3.png)
+![screenshot-3](./screenshots/screenshot-3.png)-->
 
 ## Links
 
