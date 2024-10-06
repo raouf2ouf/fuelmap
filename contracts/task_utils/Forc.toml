@@ -1,7 +1,0 @@
-[project]
-authors = ["Raouf Hecham"]
-entry = "lib.sw"
-license = "Apache-2.0"
-name = "task_utils"
-
-[dependencies]
