@@ -1,12 +1,16 @@
 library;
 
-mod errors;
-
-use errors::OwnableNFTError;
+pub enum OwnableNFTError {
+    IncorrectAssetSent: (),
+    IncorrectAmountSent: (),
+    SendMoreToComment: (),
+    SendMoreToInstanciate: ()
+}
 
 use std::{
     constants::DEFAULT_SUB_ID,
     asset::transfer,
+    string::String,
 };
 
 use standards::src5::State;
@@ -40,4 +44,24 @@ abi OwnableNFT {
     #[payable]
     #[storage(read,write)]
     fn transfer_with_ownership(new_owner: Identity);
+
+    #[payable]
+    #[storage(read)]
+    fn comment(subId: u64, id: u16, message: String);
+
+    #[storage(read)]
+    fn get_comment_fee() -> u64;
+
+    #[storage(write)]
+    fn set_comment_fee(fee: u64);
+
+    #[payable]
+    #[storage(read,write)]
+    fn update_ownership_of_asset(id: u64);
+
+    #[storage(read)]
+    fn get_owner(id: u64) -> Identity;
+
+    #[storage(read)]
+    fn get_owners() -> Vec<Identity>;
 }

@@ -28,6 +28,7 @@ pub struct UpdateTask {
 }
 
 pub struct CommentEvent {
+    pub subId: u64,
     pub id: u16,
     pub message: String
 }
@@ -64,7 +65,4 @@ abi Galaxy {
 
     #[storage(read)]
     fn set_description(description: String);
-
-    #[payable]
-    fn comment(id: u16, message: String);
 }

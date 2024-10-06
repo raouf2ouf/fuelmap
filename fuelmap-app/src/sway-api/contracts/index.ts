@@ -10,5 +10,5 @@
   Fuel-Core version: 0.36.0
 */
 
-export { Galaxy } from './Galaxy';
-export { GalaxyFactory } from './GalaxyFactory';
+export { FuelmapTemplate } from './FuelmapTemplate';
+export { FuelmapTemplateFactory } from './FuelmapTemplateFactory';

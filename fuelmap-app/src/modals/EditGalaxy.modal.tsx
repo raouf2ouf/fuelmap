@@ -132,7 +132,7 @@ const EditGalaxyModal: React.FC<Props> = ({ isOpen, data, setIsOpen }) => {
                 <div className="item-data">
                   <IonTextarea
                     value={description}
-                    rows={2}
+                    rows={8}
                     autoGrow={true}
                     onIonInput={(e: any) =>
                       setDescription(e.detail.value || "")
@@ -142,38 +142,42 @@ const EditGalaxyModal: React.FC<Props> = ({ isOpen, data, setIsOpen }) => {
                 </div>
               </div>
 
-              <div className="item">
-                <div className="item-label">
-                  <IonLabel>Theme</IonLabel>
-                  <Tooltip text="" />
-                </div>
-                <div className="item-data">
-                  <IonSelect
-                    aria-label="Project theme"
-                    value={theme}
-                    interface="popover"
-                    justify="end"
-                    onIonChange={(e: any) => setTheme(e.detail.value)}
-                  >
-                    <IonSelectOption value={GalaxyTheme.BTL}>
-                      BTL
-                    </IonSelectOption>
-                  </IonSelect>
-                </div>
-              </div>
+              {
+                // <div className="item">
+                //   <div className="item-label">
+                //     <IonLabel>Theme</IonLabel>
+                //     <Tooltip text="" />
+                //   </div>
+                //   <div className="item-data">
+                //     <IonSelect
+                //       aria-label="Project theme"
+                //       value={theme}
+                //       interface="popover"
+                //       justify="end"
+                //       onIonChange={(e: any) => setTheme(e.detail.value)}
+                //     >
+                //       <IonSelectOption value={GalaxyTheme.BTL}>
+                //         BTL
+                //       </IonSelectOption>
+                //     </IonSelect>
+                //   </div>
+                // </div>
+              }
 
-              <div className="item">
-                <div className="item-label">
-                  <IonLabel>Discoverable</IonLabel>
-                  <Tooltip text="" />
-                </div>
-                <div className="item-data">
-                  <IonToggle
-                    checked={discoverable}
-                    onIonChange={(e: any) => setDiscoverable(e.detail.value)}
-                  />
-                </div>
-              </div>
+              {
+                // <div className="item">
+                //   <div className="item-label">
+                //     <IonLabel>Discoverable</IonLabel>
+                //     <Tooltip text="" />
+                //   </div>
+                //   <div className="item-data">
+                //     <IonToggle
+                //       checked={discoverable}
+                //       onIonChange={(e: any) => setDiscoverable(e.detail.value)}
+                //     />
+                //   </div>
+                // </div>
+              }
             </div>
           </IonContent>
           <IonFooter>

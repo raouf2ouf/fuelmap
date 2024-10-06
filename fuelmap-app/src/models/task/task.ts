@@ -13,6 +13,7 @@ export interface CommentData {
 export interface BasicTaskData {
   // Basic properties
   id: string;
+  blockchainId?: number | undefined;
   name: string;
   description: string;
   type: TaskType;
@@ -20,8 +21,8 @@ export interface BasicTaskData {
 
   checked: boolean;
   closed: boolean;
-  encrypted: boolean;
-  priority: number;
+  // encrypted: boolean;
+  // priority: number;
   labels: string[];
   comments: CommentData[];
   content: string;

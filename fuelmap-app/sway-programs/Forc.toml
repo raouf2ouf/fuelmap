@@ -1,2 +1,2 @@
 [workspace]
-members = ["fuelmap-instance", "fuelmap-template"]
+members = ["fuelmap-template"]

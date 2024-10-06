@@ -30,6 +30,12 @@ const SideMenuWithProjectSelected: React.FC<Props> = ({}) => {
                   <div>Current Galaxy</div>
                   <Tooltip text=""></Tooltip>
                 </IonLabel>
+                {galaxy?.blockchainId && (
+                  <div className="galaxy-address">
+                    {galaxy?.blockchainId?.slice(0, 10)}...
+                    {galaxy?.blockchainId?.slice(-10)}
+                  </div>
+                )}
                 <div className="galaxy-name">{galaxy?.name}</div>
                 <div className="galaxy-description">{galaxy?.description}</div>
                 <MiniMap />

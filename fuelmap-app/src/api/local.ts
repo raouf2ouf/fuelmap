@@ -2,7 +2,7 @@ import { Storage, Drivers } from "@ionic/storage";
 import { GalaxyDataExport } from "@models/galaxy";
 
 const storage = new Storage({
-  name: "mnemofy",
+  name: "fuelmap",
   driverOrder: [Drivers.IndexedDB, Drivers.LocalStorage],
 });
 storage.create();
@@ -11,7 +11,7 @@ export async function saveGalaxyLocally(galaxyData: GalaxyDataExport) {
   await storage.set(galaxyData.id, galaxyData);
 }
 export async function getGalaxyLocally(
-  id: string
+  id: string,
 ): Promise<GalaxyDataExport | undefined> {
   const res = (await storage.get(id)) as GalaxyDataExport | undefined;
   return res;

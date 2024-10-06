@@ -25,7 +25,7 @@ type Props = {
   description: string;
   color: TaskColor;
   labels: string[];
-  priority: number;
+  // priority: number;
 };
 const TaskItemEditOn: React.FC<Props> = ({
   id,
@@ -34,14 +34,14 @@ const TaskItemEditOn: React.FC<Props> = ({
   description,
   color,
   labels,
-  priority,
+  // priority,
 }) => {
   const dispatch = useAppDispatch();
   const [nameE, setNameE] = useState<string>(name);
   const [descriptionE, setDescriptionE] = useState<string>(description);
   const [colorE, setColorE] = useState<TaskColor>(color);
   const [labelsE, setLabelsE] = useState<string[]>([...labels]);
-  const [priorityE, setPriorityE] = useState<number>(priority);
+  // const [priorityE, setPriorityE] = useState<number>(priority);
 
   const confirmRef = useRef<HTMLIonButtonElement>(null);
 
@@ -85,17 +85,17 @@ const TaskItemEditOn: React.FC<Props> = ({
       changes.labels = labelsE;
       previousValues.labels = labels;
     }
-    if (priorityE != priority) {
-      changes.priority = priorityE;
-      previousValues.priority = priority;
-    }
+    // if (priorityE != priority) {
+    //   changes.priority = priorityE;
+    //   previousValues.priority = priority;
+    // }
     if (Object.keys(changes).length > 0) {
       // something changed
       dispatch(
         updateAndBackupTask({
           rollback: { id, changes: previousValues },
           rollforward: { id, changes },
-        })
+        }),
       );
     }
     dispatch(setEdit());
@@ -138,6 +138,7 @@ const TaskItemEditOn: React.FC<Props> = ({
           value={nameE}
           onIonInput={handleNameChange}
           onKeyDown={handleNameKeydown}
+          maxlength={29}
         />
       </div>
       <div className="description-input">
@@ -154,7 +155,7 @@ const TaskItemEditOn: React.FC<Props> = ({
         <ChipPicker labels={labelsE} onChange={setLabelsE} />
       </div>
       <div className="toolbar">
-        <PriorityPicker priority={priorityE} onChange={setPriorityE} />
+        {/*<PriorityPicker priority={priorityE} onChange={setPriorityE} />*/}
         <div className="toolbar-specific">
           {type == TaskType.SECTOR && (
             <ColorPicker color={colorE} onChange={setColorE} />

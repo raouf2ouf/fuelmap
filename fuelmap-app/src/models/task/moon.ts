@@ -1,3 +1,4 @@
+import { generateIdForPosition } from "@models/utils";
 import { BasicTaskData, TaskData, TaskDataExport } from "./task";
 import { TaskColor, TaskType } from "./task.enums";
 
@@ -12,8 +13,13 @@ export interface Moon extends BasicMoonData, TaskData {
   type: TaskType.MOON;
 }
 
-export function deflateMoon(moon: Moon): MoonDataExport {
-  return { ...moon, children: [] };
+export function deflateMoon(
+  parentId: number,
+  idx: number,
+  moon: Moon,
+): MoonDataExport {
+  const blockchainId = generateIdForPosition(parentId, idx);
+  return { ...moon, blockchainId, children: [] };
 }
 
 export const inflateMoon = (
@@ -21,7 +27,7 @@ export const inflateMoon = (
   galaxyId: string,
   index: number,
   parent: string,
-  color: TaskColor
+  color: TaskColor,
 ): Moon => {
   const inflated = { ...data, color, galaxyId, displayed: true, index, parent };
   return inflated as Moon;

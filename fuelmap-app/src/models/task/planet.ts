@@ -1,3 +1,4 @@
+import { generateIdForPosition } from "@models/utils";
 import { Moon, MoonDataExport, deflateMoon } from "./moon";
 import { BasicTaskData, Task, TaskData, TaskDataExport } from "./task";
 import { TaskColor, TaskType } from "./task.enums";
@@ -13,7 +14,12 @@ export interface Planet extends BasicPlanetData, TaskData {
   type: TaskType.PLANET;
 }
 
-export function deflatePlanet(planet: Planet, tasks: Task[]): PlanetDataExport {
+export function deflatePlanet(
+  parentId: number,
+  idx: number,
+  planet: Planet,
+  tasks: Task[],
+): PlanetDataExport {
   const children: Task[] = [];
   const rest: Task[] = [];
   for (const task of tasks) {
@@ -23,11 +29,12 @@ export function deflatePlanet(planet: Planet, tasks: Task[]): PlanetDataExport {
       rest.push(task);
     }
   }
+  const blockchainId = generateIdForPosition(parentId, idx);
   const deflatedChildren: MoonDataExport[] = [];
-  for (const child of children) {
-    deflatedChildren.push(deflateMoon(child as Moon));
-  }
-  return { ...planet, children: deflatedChildren };
+  children.forEach((child, idx) => {
+    deflatedChildren.push(deflateMoon(blockchainId, idx, child as Moon));
+  });
+  return { ...planet, blockchainId, children: deflatedChildren };
 }
 
 export function inflatePlanet(
@@ -35,7 +42,7 @@ export function inflatePlanet(
   galaxyId: string,
   index: number,
   parent: string,
-  color: TaskColor
+  color: TaskColor,
 ): Planet {
   const inflated = { ...data, color, galaxyId, displayed: true, index, parent };
   //@ts-ignore

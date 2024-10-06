@@ -13,7 +13,7 @@ type Props = {
   content: string;
   labels: string[];
   checked: boolean;
-  priority: number;
+  // priority: number;
 };
 const TaskItemEditOff: React.FC<Props> = ({
   id,
@@ -23,14 +23,14 @@ const TaskItemEditOff: React.FC<Props> = ({
   content,
   labels,
   checked,
-  priority,
+  // priority,
 }) => {
   return (
     <div className={`task-display ${checked && "checked"}`}>
       <div className="task-name">{name}</div>
       <div className="task-description">{description}</div>
       <div className="infos-line-1">
-        {priority > 0 && <PriorityDisplay priority={priority} />}
+        {/*{priority > 0 && <PriorityDisplay priority={priority} /> */}
       </div>
       <div className="infos-line-2">
         <TaskStats id={id} />

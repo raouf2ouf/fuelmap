@@ -1,4 +1,6 @@
+import { generateIdForPosition } from "@models/utils";
 import { Planet, PlanetDataExport, deflatePlanet } from "./planet";
+import { Sector } from "./sector";
 import { BasicTaskData, Task, TaskData, TaskDataExport } from "./task";
 import { TaskColor, TaskType } from "./task.enums";
 
@@ -15,7 +17,12 @@ export interface System extends BasicSystemData, TaskData {
   type: TaskType.SYSTEM;
 }
 
-export function deflateSystem(system: System, tasks: Task[]): SystemDataExport {
+export function deflateSystem(
+  parentId: number,
+  idx: number,
+  system: System,
+  tasks: Task[],
+): SystemDataExport {
   const children: Task[] = [];
   const rest: Task[] = [];
   for (const task of tasks) {
@@ -25,11 +32,14 @@ export function deflateSystem(system: System, tasks: Task[]): SystemDataExport {
       rest.push(task);
     }
   }
+  const blockchainId = generateIdForPosition(parentId, idx);
   const deflatedChildren: PlanetDataExport[] = [];
-  for (const child of children) {
-    deflatedChildren.push(deflatePlanet(child as Planet, rest));
-  }
-  return { ...system, children: deflatedChildren };
+  children.forEach((child, idx) => {
+    deflatedChildren.push(
+      deflatePlanet(blockchainId, idx, child as Planet, rest),
+    );
+  });
+  return { ...system, blockchainId, children: deflatedChildren };
 }
 
 export const inflateSystem = (

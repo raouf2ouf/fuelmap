@@ -118,7 +118,7 @@ const ProjectsPage: React.FC = () => {
                 <div slot="content">
                   {galaxies &&
                     galaxies.map((gId) => (
-                      <GalaxyCardDisplay key={gId} id={gId} />
+                      <GalaxyCardDisplay key={gId} id={gId} nft={true} />
                     ))}
                   {!isConnected && (
                     <IonCard

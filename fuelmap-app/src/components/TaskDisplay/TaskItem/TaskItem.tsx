@@ -156,7 +156,7 @@ const TaskItem: React.FC<Props> = ({ id }) => {
         index: task.index - 0.5,
         type: task.type,
         parentId: task.parent!,
-      })
+      }),
     );
   }
   function handleAddTaskBelow() {
@@ -165,7 +165,7 @@ const TaskItem: React.FC<Props> = ({ id }) => {
         index: task.index + 0.5,
         type: task.type,
         parentId: task.parent!,
-      })
+      }),
     );
   }
   function handleAddSubTask() {
@@ -174,7 +174,7 @@ const TaskItem: React.FC<Props> = ({ id }) => {
         index: task.index + 0.5,
         type: task.type == TaskType.MOON ? TaskType.MOON : task.type + 1,
         parentId: task.type == TaskType.MOON ? task.parent! : task.id,
-      })
+      }),
     );
   }
   function handleDeleteTask() {
@@ -251,7 +251,7 @@ const TaskItem: React.FC<Props> = ({ id }) => {
                 description={task.description}
                 labels={task.labels}
                 color={task.color}
-                priority={task.priority}
+                // priority={task.priority}
               />
             ) : (
               <TaskItemEditOff
@@ -262,7 +262,7 @@ const TaskItem: React.FC<Props> = ({ id }) => {
                 labels={task.labels}
                 content={task.content}
                 checked={task.checked}
-                priority={task.priority}
+                // priority={task.priority}
               />
             )}
           </div>

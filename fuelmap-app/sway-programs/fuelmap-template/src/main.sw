@@ -2,22 +2,6 @@ contract;
 
 use standards::{src20::SRC20, src3::SRC3, src5::{SRC5, State}, src7::{Metadata, SRC7},};
 use sway_libs::{
-    asset::{
-        base::{
-            _name,
-            _set_name,
-            _set_symbol,
-            _symbol,
-            _total_assets,
-            _total_supply,
-            SetAssetAttributes,
-        },
-        metadata::*,
-        supply::{
-            _burn,
-            _mint,
-        },
-    },
     ownership::{
         _owner,
         initialize_ownership,
@@ -38,17 +22,19 @@ use std::{
 };
 
 
-use ownable_nft::{OwnableNFT, _transfer_with_ownership};
+use ownable_nft::{OwnableNFT, OwnableNFTError, _transfer_with_ownership};
 use galaxy_nft::{Galaxy, Task, AddTask, UpdateTask, TaskAction, CommentEvent, DescriptionEvent, TaskDescriptionEvent, TaskError};
 
 storage {
     name: str[32] = __to_str_array("                                "),
     symbol: str[4] = __to_str_array("FMap"),
-    total_assets: u64 = 0,
+    commenting_fee: u64 = 1,
+    instanciating_fee: u64 = 1,
     default_asset_id: Option<AssetId> =  Option::None,
     tasks: StorageMap<u16, Task> = StorageMap {},
     tasks_ids: StorageVec<u16> = StorageVec {},
-    instances: StorageMap<AssetId, Address> = StorageMap {},
+    assets_owners: StorageVec<Identity> = StorageVec {},
+    assets_metadata: StorageMap<(AssetId, u16), bool> = StorageMap {},
 }
 
 
@@ -62,20 +48,12 @@ impl SRC5 for Contract {
 impl SRC20 for Contract {
     #[storage(read)]
     fn total_assets() -> u64 {
-        return storage.total_assets.read() + 1; // the contract itself is an asset + instances
+        return storage.assets_owners.len() + 1; // the contract itself is an asset + instances
     }
 
     #[storage(read)]
     fn total_supply(asset: AssetId) -> Option<u64> {
-        if asset == storage.default_asset_id.read().unwrap() {
-            return Option::Some(1);
-        }
-        let address = storage.instances.get(asset).try_read();
-        if address.is_some() {
-            return Option::Some(1);
-        } else {
-            return Option::None;
-        }
+        return Option::Some(1);
     }
 
     #[storage(read)]
@@ -103,6 +81,61 @@ impl OwnableNFT for Contract {
         let sent_asset = msg_asset_id();
         let sent_amount = msg_amount();
         _transfer_with_ownership(new_owner, sent_asset, sent_amount, 1);
+    }
+
+    #[payable]
+    #[storage(read)]
+    fn comment(subId: u64, id: u16, message: String) {
+        let amount = msg_amount();
+        let min_value = storage.commenting_fee.read();
+
+        let asset_id = msg_asset_id();
+        require(asset_id == AssetId::base() && amount >= min_value, OwnableNFTError::SendMoreToComment);
+        log(CommentEvent {subId: subId, id: id, message: message});
+    }
+
+    #[storage(read)]
+    fn get_comment_fee() -> u64 {
+        return storage.commenting_fee.read();
+    }
+
+    #[storage(write)]
+    fn set_comment_fee(fee: u64) {
+        storage.commenting_fee.write(fee);
+    }
+
+    #[payable]
+    #[storage(read,write)]
+    fn update_ownership_of_asset(id: u64) {
+        let new_owner = msg_sender().unwrap();
+        let sent_asset = msg_asset_id();
+        let sent_amount = msg_amount();
+        let assetId = AssetId::new(ContractId::this(), SubId::from(id.as_u256()));
+        // let sent_asset = msg_asset_id();
+        // let sent_amount = msg_amount();
+        require(sent_asset == assetId, OwnableNFTError::IncorrectAssetSent);
+
+        require(sent_amount == 1, OwnableNFTError::IncorrectAmountSent);
+
+        storage.assets_owners.insert(id, new_owner);
+        transfer(new_owner, assetId, 1);
+    }
+
+    #[storage(read)]
+    fn get_owner(id: u64) -> Identity {
+        return storage.assets_owners.get(id).unwrap().read();
+    }
+
+    #[storage(read)]
+    fn get_owners() -> Vec<Identity> {
+        let mut owners = Vec::new();
+        let mut i = 0;
+        let count = storage.assets_owners.len();
+        while i < count {
+            owners.push(storage.assets_owners.get(i).unwrap().read());
+            i += 1;
+        }
+        return owners;
     }
 }
 
@@ -194,10 +227,6 @@ impl Galaxy for Contract {
         log(DescriptionEvent {description: description});
     }
 
-    #[payable]
-    fn comment(id: u16, message: String) {
-        log(CommentEvent {id: id, message: message});
-    }
 
     #[storage(read)]
     fn get_task(id: u16) -> Option<Task> {

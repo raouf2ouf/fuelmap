@@ -39,7 +39,7 @@ const Wallet: React.FC = () => {
   return (
     <div className="wallet-container">
       {isConnected ? (
-        isConnectedToCorrectNetwork ? (
+        !isConnectedToCorrectNetwork ? (
           <IonButton fill="outline">Wrong network!</IonButton>
         ) : (
           <IonButton fill="outline" onClick={handleDisconnect}>

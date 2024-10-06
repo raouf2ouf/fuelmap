@@ -1,9 +1,0 @@
-[project]
-authors = ["Raouf Hecham"]
-entry = "main.sw"
-license = "Apache-2.0"
-name = "fuelmap-instance"
-
-[dependencies]
-ownable_nft = { path = "../ownable-nft" }
-galaxy_nft = { path = "../galaxy-nft" }

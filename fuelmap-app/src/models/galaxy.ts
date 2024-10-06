@@ -34,6 +34,7 @@ export enum SaveStatus {
 
 interface BasicGalaxyData {
   id: string;
+  blockchainId?: string | undefined;
   name: string;
   description: string;
 
@@ -41,6 +42,7 @@ interface BasicGalaxyData {
   discoverable: boolean;
   category: GalaxyCategory;
   date: number;
+  owner?: string | undefined;
   lastServerDate?: number | undefined;
   lastModificationDate?: number | undefined;
   saveStatus?: SaveStatus | undefined;
@@ -68,9 +70,9 @@ export function deflateGalaxy(
     }
   }
   const deflatedChildren: SectorDataExport[] = [];
-  for (const child of children) {
-    deflatedChildren.push(deflateSector(child as Sector, rest));
-  }
+  children.forEach((child, idx) => {
+    deflatedChildren.push(deflateSector(child as Sector, idx, rest));
+  });
   return {
     id: galaxy.id,
     name: galaxy.name,

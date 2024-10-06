@@ -91,7 +91,7 @@ const Home: React.FC = () => {
 
             <div className="logo hide-sm">
               <div id="logo-text" className="hide-md">
-                Mnemo<span>fy</span>
+                Fuel<span>Map</span>
               </div>
               <div id="version" className="hide-md">
                 {version}

@@ -10,8 +10,9 @@ import { format } from "date-fns";
 
 type Props = {
   id: string;
+  nft?: boolean | undefined;
 };
-const GalaxyCardDisplay: React.FC<Props> = ({ id }) => {
+const GalaxyCardDisplay: React.FC<Props> = ({ id, nft }) => {
   const dispatch = useAppDispatch();
   const history = useHistory();
   const galaxy = useAppSelector((state) => selectGalaxyById(state, id));
@@ -21,24 +22,32 @@ const GalaxyCardDisplay: React.FC<Props> = ({ id }) => {
     history.push(`/overview/${id}`);
   }
   return (
-    <IonCard type="button" className="card-button galaxy" onClick={handleOpen}>
-      <IonCardContent>
-        <div className="card-static-mini-map">
-          <StaticMiniMap
-            date={galaxy.date}
-            hexes={galaxy.minimap?.hexes}
-            territories={galaxy.minimap?.territories}
-            systems={galaxy.minimap?.systems}
-          />
-        </div>
-        <div className="card-title">
-          <IonLabel className="card-title-main">{galaxy.name}</IonLabel>
-          <IonLabel className="card-subtitle">
-            {galaxy.date && format(galaxy.date, "yyyy-MM-dd HH:mm:ss")}
-          </IonLabel>
-        </div>
-      </IonCardContent>
-    </IonCard>
+    <>
+      {galaxy && (!nft || galaxy.blockchainId) && (
+        <IonCard
+          type="button"
+          className="card-button galaxy"
+          onClick={handleOpen}
+        >
+          <IonCardContent>
+            <div className="card-static-mini-map">
+              <StaticMiniMap
+                date={galaxy.date}
+                hexes={galaxy.minimap?.hexes}
+                territories={galaxy.minimap?.territories}
+                systems={galaxy.minimap?.systems}
+              />
+            </div>
+            <div className="card-title">
+              <IonLabel className="card-title-main">{galaxy.name}</IonLabel>
+              <IonLabel className="card-subtitle">
+                {galaxy.date && format(galaxy.date, "yyyy-MM-dd HH:mm:ss")}
+              </IonLabel>
+            </div>
+          </IonCardContent>
+        </IonCard>
+      )}
+    </>
   );
 };
 

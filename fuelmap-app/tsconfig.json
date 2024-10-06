@@ -24,7 +24,8 @@
       "@store/*": ["./src/store/*"],
       "@assets/*": ["./src/assets/*"],
       "@api/*": ["./src/api/*"],
-      "$fuels/*": ["./src/fuels/*"]
+      "$fuels/*": ["./src/fuels/*"],
+      "$sway-api/*": ["./src/sway-api/*"]
     }
   },
   "include": ["src"],

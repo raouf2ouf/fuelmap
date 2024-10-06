@@ -3,15 +3,6 @@ name = "core"
 source = "path+from-root-4BA3A18A2D620E67"
 
 [[package]]
-name = "fuelmap-instance"
-source = "member"
-dependencies = [
-    "galaxy_nft",
-    "ownable_nft",
-    "std",
-]
-
-[[package]]
 name = "fuelmap-template"
 source = "member"
 dependencies = [
@@ -24,12 +15,12 @@ dependencies = [
 
 [[package]]
 name = "galaxy_nft"
-source = "path+from-root-087204CEC2769619"
+source = "path+from-root-553E4A41BB2F97CC"
 dependencies = ["std"]
 
 [[package]]
 name = "ownable_nft"
-source = "path+from-root-087204CEC2769619"
+source = "path+from-root-553E4A41BB2F97CC"
 dependencies = [
     "standards git+https://github.com/FuelLabs/sway-standards?tag=v0.6.1#792639cdf391565e6e6a02482ea8a46d9604a6f5",
     "std",

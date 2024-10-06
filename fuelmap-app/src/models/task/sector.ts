@@ -1,3 +1,4 @@
+import { generateIdForPosition } from "@models/utils";
 import { System, SystemDataExport, deflateSystem } from "./system";
 import { BasicTaskData, Task, TaskData, TaskDataExport } from "./task";
 import { TaskColor, TaskType } from "./task.enums";
@@ -16,7 +17,11 @@ export interface Sector extends BasicSectorData, TaskData {
   type: TaskType.SECTOR;
 }
 
-export function deflateSector(sector: Sector, tasks: Task[]): SectorDataExport {
+export function deflateSector(
+  sector: Sector,
+  idx: number,
+  tasks: Task[],
+): SectorDataExport {
   const children: Task[] = [];
   const rest: Task[] = [];
   for (const task of tasks) {
@@ -27,10 +32,13 @@ export function deflateSector(sector: Sector, tasks: Task[]): SectorDataExport {
     }
   }
   const deflatedChildren: SystemDataExport[] = [];
-  for (const child of children) {
-    deflatedChildren.push(deflateSystem(child as System, rest));
-  }
-  return { ...sector, children: deflatedChildren };
+  const blockchainId = generateIdForPosition(null, idx);
+  children.forEach((child, idx) => {
+    deflatedChildren.push(
+      deflateSystem(blockchainId!, idx, child as System, rest),
+    );
+  });
+  return { ...sector, blockchainId, children: deflatedChildren };
 }
 
 export const inflateSector = (

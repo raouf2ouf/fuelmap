@@ -10,6 +10,12 @@ import { RootState } from "./store";
 import { toast } from "react-toastify";
 import { getAllLocalGalaxies, saveGalaxyLocally } from "@api/local";
 import { buildMinimapRepresentation } from "./galaxies.slice.utils";
+import {
+  FuelmapTemplate,
+  TaskActionInput,
+} from "$sway-api/contracts/FuelmapTemplate";
+import { FuelmapTemplateFactory } from "$sway-api/contracts";
+import { Account } from "fuels";
 
 // API
 export const saveCurrentGalaxyLocally = createAsyncThunk(
@@ -28,7 +34,35 @@ export const saveCurrentGalaxyLocally = createAsyncThunk(
     await saveGalaxyLocally(galaxyData);
     galaxyData.minimap = buildMinimapRepresentation(galaxyData);
     return galaxyData;
-  }
+  },
+);
+
+export const exportGalaxyToDeploy = createSelector(
+  [(state) => state],
+  (state: RootState) => {
+    const currentGalaxyId = state.galaxies.currentGalaxyId;
+    if (!currentGalaxyId) return;
+    const currentGalaxy = state.galaxies.entities[currentGalaxyId];
+    const tasks = Object.values(state.tasks.entities)
+      .filter((t) => t.galaxyId == currentGalaxyId && t.name.length > 0)
+      .sort((a, b) => a.index - b.index);
+    const galaxyData = deflateGalaxy(currentGalaxy, tasks);
+    galaxyData.date = Date.now();
+    galaxyData.saveStatus = SaveStatus.NO_COPY;
+    galaxyData.minimap = buildMinimapRepresentation(galaxyData);
+
+    return galaxyData;
+  },
+);
+
+export const deployGalaxy = createAsyncThunk(
+  "galaxies/deployGalaxy",
+  async (
+    data: GalaxyDataExport,
+    thunkAPI,
+  ): Promise<GalaxyDataExport | undefined> => {
+    return data;
+  },
 );
 
 export const downloadCurrentGalaxy = createAsyncThunk(
@@ -52,7 +86,7 @@ export const downloadCurrentGalaxy = createAsyncThunk(
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
-  }
+  },
 );
 
 export const setCurrentGalaxy = createAsyncThunk(
@@ -63,13 +97,13 @@ export const setCurrentGalaxy = createAsyncThunk(
     if (state.galaxies.currentGalaxyId == id) return;
     if (galaxyData) {
       thunkAPI.dispatch(
-        inflateTasks({ data: galaxyData.tasks, galaxyId: galaxyData.id })
+        inflateTasks({ data: galaxyData.tasks, galaxyId: galaxyData.id }),
       );
       return id;
     } else {
       throw Error("Galaxy not found.");
     }
-  }
+  },
 );
 
 export const addGalaxyAndLoadChildren = createAsyncThunk(
@@ -77,14 +111,14 @@ export const addGalaxyAndLoadChildren = createAsyncThunk(
   async (data: GalaxyDataExport, thunkAPI) => {
     thunkAPI.dispatch(inflateTasks({ data: data.tasks, galaxyId: data.id }));
     return data;
-  }
+  },
 );
 
 export const addLocalGalaxies = createAsyncThunk(
   "galaxies/addLocalGalaxies",
   async (
     galaxyId: string | undefined,
-    thunkAPI
+    thunkAPI,
   ): Promise<{
     galaxies: GalaxyDataExport[];
     galaxyId: string | undefined;
@@ -101,7 +135,7 @@ export const addLocalGalaxies = createAsyncThunk(
       const exists = local.find((g) => g.id == galaxyId);
       if (exists) {
         thunkAPI.dispatch(
-          inflateTasks({ data: exists.tasks, galaxyId: exists.id })
+          inflateTasks({ data: exists.tasks, galaxyId: exists.id }),
         );
       }
       if (!exists) {
@@ -109,7 +143,7 @@ export const addLocalGalaxies = createAsyncThunk(
       }
     }
     return { galaxies: local, galaxyId };
-  }
+  },
 );
 
 // Adapter
@@ -123,21 +157,21 @@ export const selectCurrentGalaxy = createSelector(
   [selectAllGalaxies, (state) => state.galaxies.currentGalaxyId],
   (galaxies: GalaxyDataExport[], currentGalaxyId?: string) => {
     return galaxies.find((g) => g.id == currentGalaxyId);
-  }
+  },
 );
 
 export const selectCurrentGalaxySaveStatus = createSelector(
   [selectAllGalaxies, (state) => state.galaxies.currentGalaxyId],
   (galaxies: GalaxyDataExport[], currentGalaxyId?: string) => {
     return galaxies.find((g) => g.id == currentGalaxyId)?.saveStatus;
-  }
+  },
 );
 
 export const selectAllGalaxiesIds = createSelector(
   [selectAllGalaxies],
   (galaxies: GalaxyDataExport[]) => {
     return galaxies.map((g) => g.id);
-  }
+  },
 );
 
 // Slice
@@ -153,7 +187,7 @@ export const galaxiesSlice = createSlice({
     },
     setCurrentGalaxySaveStatus: (
       state,
-      { payload }: { payload: SaveStatus }
+      { payload }: { payload: SaveStatus },
     ) => {
       const id = state.currentGalaxyId;
       if (id) {
@@ -184,6 +218,11 @@ export const galaxiesSlice = createSlice({
       toast.error(`Galaxy not found`);
     });
     builder.addCase(saveCurrentGalaxyLocally.fulfilled, (state, action) => {
+      if (action.payload) {
+        galaxiesAdapter.upsertOne(state, action.payload);
+      }
+    });
+    builder.addCase(deployGalaxy.fulfilled, (state, action) => {
       if (action.payload) {
         galaxiesAdapter.upsertOne(state, action.payload);
       }
