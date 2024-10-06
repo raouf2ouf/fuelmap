@@ -23,7 +23,7 @@ This project for the **Encode x Fuel Hackathon** introduces three novel ideas:
 
 ## How it works
 
-### General NFT Scaling Idea
+### General Ownable NFT Idea
 
 NFTs are generally implemented using the `SRC20` standard in fuel, they are represented as some metadata (link to an image, a list of attributes, etc.). Given the cheap fees, a new paradigm can be added to the way NFTs are stored and interacted with on chain.
 
